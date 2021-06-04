@@ -15,32 +15,18 @@ Para descargar la informacion use la opcion de descarga directa con este comando
 
 
 * La primera variable con la que trabajo es cldamt: cloud amount (en porcentaje)
+
+Uso este tutorial https://carpentrieslab.github.io/python-aos-lesson/02-visualisation/index.html para construir el codigo
 """
 
 #%% 
 """
 Visualizo la informacion:
-    Para eso abro uno de los archivos .nc de nubosidad mensual
+    Abro uno de los archivos .nc de nubosidad mensual
     Veo las variables
-    Hago un primer grafico exploratorio 
-    Uso este tutorial https://carpentrieslab.github.io/python-aos-lesson/02-visualisation/index.html
 """
 
 import xarray as xr
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-import numpy as np
-import cartopy.feature as feature
-#para graficar cargo libreria de paleta de colores rain
-import cmocean
-#para poner pais
-from cartopy.io import shapereader
-import geopandas
-#para poner provincia
-from shapely.geometry.multipolygon import MultiPolygon
-
-
-
 nc_ruta="Documentos/Doctorado/datos/nubosidad/ISCCP-H_HGM"
 nc_name="ISCCP-Basic.HGM.v01r00.GLOBAL.1986.07.99.9999.GPC.10KM.CS00.EA1.00.nc"
 dset=xr.open_dataset(nc_ruta+"/"+nc_name)
@@ -60,7 +46,46 @@ Vemos:
         sigma_tc_time: cloud-top temperature (TC) mean standard deviation over time
         cldamt_ir:  Average cloud amount detected by IR threshold regardless of VIS threshold
         cldamt_types: Mean cloud amount for cloud types (%) Cloud detected by either IR or VIS threshold, type determined by cloud top location adjusted for optically thinner clouds and optical thickness for liquid or ice as determined by cloud top temperature
+
 """
+#%%
+"""
+Abro los datos y los acomodo en una lista. Cada lista se corresponde al dset de cada NetCDF (uno por cada mes por cada anio)
+"""
+import xarray as xr
+import pandas as pd
+
+fecha_inicio="1983-07-15"
+fecha_final="2017-07-15"
+
+datelist = pd.date_range(start="1983-07-15",end="2017-07-15",freq="M")
+cantidad_de_datos=len(datelist)
+
+#armo lista de nombres
+nc_name_list=[None]*cantidad_de_datos
+for i in range(0,cantidad_de_datos):
+    nc_name_list[i]="ISCCP-Basic.HGM.v01r00.GLOBAL."+str(datelist[i])[0:4]+"."+str(datelist[i])[5:7]+".99.9999.GPC.10KM.CS00.EA1.00.nc"
+
+nc_ruta="Documentos/Doctorado/datos/nubosidad/ISCCP-H_HGM"
+
+data_list=[None]*cantidad_de_datos
+for i in range(0,cantidad_de_datos):
+    data_list[i]=xr.open_dataset(nc_ruta+"/"+nc_name_list[i])
+
+#%%
+
+#import cartopy.crs as ccrs
+#import matplotlib.pyplot as plt
+#import numpy as np
+#import cartopy.feature as feature
+#para graficar cargo libreria de paleta de colores rain
+#import cmocean
+#para poner pais
+#from cartopy.io import shapereader
+#import geopandas
+#para poner provincia
+#from shapely.geometry.multipolygon import MultiPolygon
+
 
 #veo un primer grafico
 
@@ -110,9 +135,9 @@ provincias=MultiPolygon(provincias) #paso a multipoligonos para poder ponerlo en
 
 
 #ploteo
-fig = plt.figure(figsize=[12,5])
+fig1 = plt.figure(figsize=[12,5])
 
-ax = fig.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
+ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
 
 cldamt_data_subset.plot.contourf(ax=ax,
                    levels=np.arange(0, 101, 10),
@@ -129,26 +154,29 @@ ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none',
 
 ax.coastlines(color='0.3')
 
-ax.set_xticklabels(np.arange(-60.5,-32.5)[::4])
-plt.xticks(np.arange(-60.5,-32.5)[::4])
+ax.set_xticklabels(np.arange(-60,-31)[::4])
+plt.xticks(np.arange(-60,-31)[::4])
 ax.set_xlabel("Longitud")
 
-ax.set_yticklabels(np.arange(-34.5,-16.5)[::4])
-plt.yticks(np.arange(-34.5,-16.5)[::4])
+ax.set_yticklabels(np.arange(-38,-16)[::4])
+plt.yticks(np.arange(-38,-16)[::4])
 ax.set_ylabel("Latitud")
 
-
-plt.gca().gridlines(alpha=0.3)
+plt.grid(linestyle="--", alpha=0.3)
 
 plt.title("Porcentaje de nubosidad anio y mes")
 plt.show()
 
 
 #%%
+"""
+Abro archivos nc y armo dataframe con todos los datos ?
+"""
 
+#%%
 """
 Armo funcion que:
-    Abre archivos nc 
+    Abre archivos nc
     Selecciona region
     Selecciona variables
 """
