@@ -31,10 +31,18 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import cartopy.feature as feature
-import cartopy.io.shapereader as shapereader
+#para graficar cargo libreria de paleta de colores rain
+import cmocean
+#para poner pais
+from cartopy.io import shapereader
+import geopandas
+#para poner provincia
+from shapely.geometry.multipolygon import MultiPolygon
+
+
 
 nc_ruta="Documentos/Doctorado/datos/nubosidad/ISCCP-H_HGM"
-nc_name="ISCCP-Basic.HGM.v01r00.GLOBAL.1983.07.99.9999.GPC.10KM.CS00.EA1.00.nc"
+nc_name="ISCCP-Basic.HGM.v01r00.GLOBAL.1986.07.99.9999.GPC.10KM.CS00.EA1.00.nc"
 dset=xr.open_dataset(nc_ruta+"/"+nc_name)
 print(dset)
 
@@ -62,24 +70,17 @@ cldamt_data.attrs["units"]="%" #cambio el nombre de la unidad
 #selecciono region
 lats=cldamt_data["lat"][:]
 lons=cldamt_data["lon"][:]
-lat_lims=[-39,-16] #lean
-lon_lims=[296,329] #lean
+lat_lims=[-39,-16] #lean Los datos van de 1 en 1 pero con .5 osea: -38.5 -16.5
+lon_lims=[360-64,360-31] #lean 360-64 (64 O) 360-31 (31 O) 
+#lat_lims=[-54,-16] #
+#lon_lims=[360-80,360-31] #lean 360-64 (64 O) 360-31 (31 O)
 lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
 lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
 
 cldamt_data_subset=cldamt_data[lat_inds,lon_inds]
 
-#para graficar cargo libreria de paleta de colores rain
-import cmocean
 
-#para poner pais
-
-from cartopy.io import shapereader
-import numpy as np
-import geopandas
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-
+#cargo paises
 #descargo mapa de natural_earth
 # get country borders
 resolution = '10m'
@@ -89,13 +90,29 @@ shpfilename = shapereader.natural_earth(resolution, category, name)
 # read the shapefile using geopandas
 df = geopandas.read_file(shpfilename)
 # read the argentina borders
-poly = df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0]
+argentina = df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0]
+brasil = df.loc[df['ADMIN'] == 'Brazil']['geometry'].values[0]
+paraguay = df.loc[df['ADMIN'] == 'Paraguay']['geometry'].values[0]
+uruguay = df.loc[df['ADMIN'] == 'Uruguay']['geometry'].values[0]
+bolivia = df.loc[df['ADMIN'] == 'Bolivia']['geometry'].values[0]
+chile = df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0]
+peru = df.loc[df['ADMIN'] == "Peru"]['geometry'].values[0]
+
+paises=MultiPolygon([argentina,brasil,paraguay,uruguay,bolivia,chile,peru])
+
+#lo hago con datos del IGN 
+#descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
+IGN=geopandas.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
+provincias=[None]*24
+for i in range(0,24):
+    provincias[i]=IGN["geometry"][i]
+provincias=MultiPolygon(provincias) #paso a multipoligonos para poder ponerlo en mapa
+
 
 #ploteo
-
 fig = plt.figure(figsize=[12,5])
 
-ax = fig.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=180))
+ax = fig.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
 
 cldamt_data_subset.plot.contourf(ax=ax,
                    levels=np.arange(0, 101, 10),
@@ -104,11 +121,26 @@ cldamt_data_subset.plot.contourf(ax=ax,
                    cbar_kwargs={'label': cldamt_data_subset.units},
                    cmap=cmocean.cm.rain)
 
-ax.add_geometries(poly, crs=ccrs.PlateCarree(), facecolor='none', 
-                  edgecolor='0.5')
+ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.5',linewidth=0.7,alpha=0.8)
 
-ax.coastlines()
+ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.4',alpha=0.8)
 
+ax.coastlines(color='0.3')
+
+ax.set_xticklabels(np.arange(-60.5,-32.5)[::4])
+plt.xticks(np.arange(-60.5,-32.5)[::4])
+ax.set_xlabel("Longitud")
+
+ax.set_yticklabels(np.arange(-34.5,-16.5)[::4])
+plt.yticks(np.arange(-34.5,-16.5)[::4])
+ax.set_ylabel("Latitud")
+
+
+plt.gca().gridlines(alpha=0.3)
+
+plt.title("Porcentaje de nubosidad anio y mes")
 plt.show()
 
 
