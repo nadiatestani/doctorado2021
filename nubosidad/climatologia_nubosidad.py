@@ -73,6 +73,57 @@ for i in range(0,cantidad_de_datos):
     data_list[i]=xr.open_dataset(nc_ruta+"/"+nc_name_list[i])
 
 #%%
+"""
+Grafico los campos de amount de nubosidad (%): cldamt para todos los tiempos y los acomodo en un gif ?
+"""
+import numpy as np
+
+
+variable="cldamt" #variable a graficar
+lat_lims=[-38.5,-15.5] #limites de latitudes, recordar que van de a 1 grado y con decimales .5
+lon_lims=[360-63.5,360-30.5] #limites de longitudes, recordar que van de a 1 grado y con decimales .5 y de 0 a 360.
+
+unidades_nombre="%" #nombre nuevo para las unidades, aparece en el grafico
+
+dset=data_list[1]
+
+variable_data=dset[variable].mean("time", keep_attrs=True) #selecciona la variable a trabajar y toma el unico valor para cada punto de grilla
+
+variable_data_subset=variable_data[np.where((variable_data["lat"][:]>lat_lims[0]) & (variable_data["lat"][:]<lat_lims[1]))[0],np.where((variable_data["lon"][:]>lon_lims[0]) & (variable_data["lon"][:]<lon_lims[1]))[0]] #selecciono region
+
+#cargo shape con paises
+from shapely.geometry.multipolygon import MultiPolygon
+from cartopy.io import shapereader
+import geopandas
+
+resolution = '10m'
+category = 'cultural'
+name = 'admin_0_countries'
+shpfilename = shapereader.natural_earth(resolution, category, name) #cargo paises de natural_earth
+# cargo el shapefile usando geopandas
+df = geopandas.read_file(shpfilename)
+# leo los paises que voy a necesitar
+paises=MultiPolygon([df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Brazil']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Paraguay']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Uruguay']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Bolivia']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Peru"]['geometry'].values[0]]) #los paso a multipolygon para poder graficarlos
+
+
+#cargo shape con provincias de argentina con datos del IGN 
+#descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
+IGN=geopandas.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
+provincias=[None]*24
+for i in range(0,24):
+    provincias[i]=IGN["geometry"][i]
+provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
+
+#grafico
+#HACER FUNCION 
+
+#%%
 
 #import cartopy.crs as ccrs
 #import matplotlib.pyplot as plt
