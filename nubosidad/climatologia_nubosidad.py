@@ -228,9 +228,9 @@ for i in range(0,24):
     provincias[i]=IGN["geometry"][i]
 provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
 
-cantidad_de_datos
+
 #grafico todos los campos
-for i in range(0,4):
+for i in range(290,cantidad_de_datos):
     grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
 
 
