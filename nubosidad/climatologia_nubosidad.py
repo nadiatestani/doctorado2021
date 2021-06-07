@@ -72,24 +72,133 @@ data_list=[None]*cantidad_de_datos
 for i in range(0,cantidad_de_datos):
     data_list[i]=xr.open_dataset(nc_ruta+"/"+nc_name_list[i])
 
+#hago que los indices de la lista sean las fechas
+
+#%%
+
+"""
+defino funcion que grafica los campos de una determinada variable en una determinada region
+"""
+
+def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida):
+    """
+    Parameters
+    ----------
+    paises : shapely.geometry.multipolygon.MultiPolygon
+        shape con paises a graficar en mapa
+    provincias : shapely.geometry.multipolygon.MultiPolygon
+        shape con provincias a graficar en mapa
+    data_list : list
+        lista con data, en cada elemento de la lista hay un NetCDF i.e un xarray.core.dataset.Dataset
+    indice_list : float
+        indice del elemento de la lista a abrir
+    variable : string
+        nombre de la variable de los NetCDF a graficar
+    lat_min : float
+        latitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lat_max : float
+        latitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lon_min : float
+        longitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    lon_max : float
+        longitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    unidades_nombre : string
+        nombre que se desea para las unidades de la variable, aparece en el grafico
+    valor_minimo : float
+        valor minimo que toma la escala de la variable
+    valor_maximo : float
+        valor maximo que toma la escala de la variable
+    delta_valor : float
+        intervalo entre valores de la escala de la variable
+    xticks_min : float
+        minimo de longitud que se marca en el grafico en grados oeste con el signo -
+    xticks_max : float
+        maximo de longitud que se marca en el grafico en grados oeste con el signo -
+    yticks_min : float
+        minimo de latitud que se marca en el grafico en grados sur con el signo -.
+    yticks_max : float
+        maximo de latitud que se marca en el grafico en grados sur con el signo -.
+    grid : optional
+        The default is True.
+    region: string
+        Nombre de la region
+    ruta_salida : str
+        Ruta donde se guardan los graficos
+
+    Returns
+    -------
+    Guarda graficos y los muestra.
+
+    """
+    #carga librerias necesarias
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cmocean
+    
+    #limpio graficos
+    plt.close()
+    
+    #selecciona variable
+    data=data_list[indice_list]
+    variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+    variable_data.attrs["units"]=unidades_nombre #cambio el nombre de la unidad
+
+    #selecciono region
+    lats=variable_data["lat"][:]
+    lons=variable_data["lon"][:]
+    lat_lims=[lat_min,lat_max]
+    lon_lims=[360+lon_min,360+lon_max] #lean 360-64 (64 O) 360-31 (31 O) 
+    lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+    lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+    variable_data_subset=variable_data[lat_inds,lon_inds]
+
+    #extraigo mes
+    mes=str(data_list[indice_list]["time"].values[0])[5:7]
+    #extraigo anio
+    anio=str(data_list[indice_list]["time"].values[0])[0:4]
+    
+    #ploteo
+    fig1 = plt.figure(figsize=[12,5],dpi=200)
+    ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
+
+    variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='max',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.rain)
+
+    ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.5',linewidth=0.7,alpha=0.8)
+
+    ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.4',alpha=0.8)
+
+    ax.coastlines(color='0.3')
+
+    ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::4])
+    plt.xticks(np.arange(xticks_min,xticks_max)[::4])
+    ax.set_xlabel("Longitud")
+
+    ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::4])
+    plt.yticks(np.arange(yticks_min,yticks_max)[::4])
+    ax.set_ylabel("Latitud")
+
+    if (grid==True):
+        plt.grid(linestyle="--", alpha=0.3)
+
+    plt.title(variable+" "+region+" "+mes+"/"+anio)
+    #plt.tight_layout()
+    plt.savefig(ruta_salida+"/"+variable+" "+region+" "+mes+"-"+anio)
+    plt.show()
+
+
 #%%
 """
-Grafico los campos de amount de nubosidad (%): cldamt para todos los tiempos y los acomodo en un gif ?
+Grafico los campos de amount de nubosidad (%): cldamt para todos los tiempos y los guardo
 """
+
 import numpy as np
-
-
-variable="cldamt" #variable a graficar
-lat_lims=[-38.5,-15.5] #limites de latitudes, recordar que van de a 1 grado y con decimales .5
-lon_lims=[360-63.5,360-30.5] #limites de longitudes, recordar que van de a 1 grado y con decimales .5 y de 0 a 360.
-
-unidades_nombre="%" #nombre nuevo para las unidades, aparece en el grafico
-
-dset=data_list[1]
-
-variable_data=dset[variable].mean("time", keep_attrs=True) #selecciona la variable a trabajar y toma el unico valor para cada punto de grilla
-
-variable_data_subset=variable_data[np.where((variable_data["lat"][:]>lat_lims[0]) & (variable_data["lat"][:]<lat_lims[1]))[0],np.where((variable_data["lon"][:]>lon_lims[0]) & (variable_data["lon"][:]<lon_lims[1]))[0]] #selecciono region
 
 #cargo shape con paises
 from shapely.geometry.multipolygon import MultiPolygon
@@ -111,7 +220,6 @@ paises=MultiPolygon([df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0],
                      df.loc[df['ADMIN'] == "Peru"]['geometry'].values[0]]) #los paso a multipolygon para poder graficarlos
 
-
 #cargo shape con provincias de argentina con datos del IGN 
 #descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
 IGN=geopandas.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
@@ -120,103 +228,10 @@ for i in range(0,24):
     provincias[i]=IGN["geometry"][i]
 provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
 
-#grafico
-#HACER FUNCION 
-
-#%%
-
-#import cartopy.crs as ccrs
-#import matplotlib.pyplot as plt
-#import numpy as np
-#import cartopy.feature as feature
-#para graficar cargo libreria de paleta de colores rain
-#import cmocean
-#para poner pais
-#from cartopy.io import shapereader
-#import geopandas
-#para poner provincia
-#from shapely.geometry.multipolygon import MultiPolygon
-
-
-#veo un primer grafico
-
-cldamt_data=dset["cldamt"].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
-cldamt_data.attrs["units"]="%" #cambio el nombre de la unidad
-
-#selecciono region
-lats=cldamt_data["lat"][:]
-lons=cldamt_data["lon"][:]
-lat_lims=[-39,-16] #lean Los datos van de 1 en 1 pero con .5 osea: -38.5 -16.5
-lon_lims=[360-64,360-31] #lean 360-64 (64 O) 360-31 (31 O) 
-#lat_lims=[-54,-16] #
-#lon_lims=[360-80,360-31] #lean 360-64 (64 O) 360-31 (31 O)
-lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
-lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
-
-cldamt_data_subset=cldamt_data[lat_inds,lon_inds]
-
-
-#cargo paises
-#descargo mapa de natural_earth
-# get country borders
-resolution = '10m'
-category = 'cultural'
-name = 'admin_0_countries'
-shpfilename = shapereader.natural_earth(resolution, category, name)
-# read the shapefile using geopandas
-df = geopandas.read_file(shpfilename)
-# read the argentina borders
-argentina = df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0]
-brasil = df.loc[df['ADMIN'] == 'Brazil']['geometry'].values[0]
-paraguay = df.loc[df['ADMIN'] == 'Paraguay']['geometry'].values[0]
-uruguay = df.loc[df['ADMIN'] == 'Uruguay']['geometry'].values[0]
-bolivia = df.loc[df['ADMIN'] == 'Bolivia']['geometry'].values[0]
-chile = df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0]
-peru = df.loc[df['ADMIN'] == "Peru"]['geometry'].values[0]
-
-paises=MultiPolygon([argentina,brasil,paraguay,uruguay,bolivia,chile,peru])
-
-#lo hago con datos del IGN 
-#descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
-IGN=geopandas.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
-provincias=[None]*24
-for i in range(0,24):
-    provincias[i]=IGN["geometry"][i]
-provincias=MultiPolygon(provincias) #paso a multipoligonos para poder ponerlo en mapa
-
-
-#ploteo
-fig1 = plt.figure(figsize=[12,5])
-
-ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
-
-cldamt_data_subset.plot.contourf(ax=ax,
-                   levels=np.arange(0, 101, 10),
-                   extend='max',
-                   transform=ccrs.PlateCarree(),
-                   cbar_kwargs={'label': cldamt_data_subset.units},
-                   cmap=cmocean.cm.rain)
-
-ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
-                  edgecolor='0.5',linewidth=0.7,alpha=0.8)
-
-ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none', 
-                  edgecolor='0.4',alpha=0.8)
-
-ax.coastlines(color='0.3')
-
-ax.set_xticklabels(np.arange(-60,-31)[::4])
-plt.xticks(np.arange(-60,-31)[::4])
-ax.set_xlabel("Longitud")
-
-ax.set_yticklabels(np.arange(-38,-16)[::4])
-plt.yticks(np.arange(-38,-16)[::4])
-ax.set_ylabel("Latitud")
-
-plt.grid(linestyle="--", alpha=0.3)
-
-plt.title("Porcentaje de nubosidad anio y mes")
-plt.show()
+cantidad_de_datos
+#grafico todos los campos
+for i in range(0,4):
+    grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
 
 
 #%%
