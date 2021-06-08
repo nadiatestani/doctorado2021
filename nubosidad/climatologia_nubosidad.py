@@ -229,15 +229,51 @@ for i in range(0,24):
 provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
 
 
-#grafico todos los campos
-for i in range(290,cantidad_de_datos):
+for i in range(0,cantidad_de_datos):
     grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
 
 
 #%%
 """
-Abro archivos nc y armo dataframe con todos los datos ?
+
+Calculo anomalias climaticas mensuales de variable. Tomo los anios enteros: 1984 a 2016 (32 anios) (DUDA seria hasta 2014?)
+
+1) Calculo media climatica de variable mensual para cada mes, es decir por ejemplo para Enero seria el promedio de la cantidad punto a punto de todos los Eneros del periodo climatologico.
+
+2) A cada mes de cada anio punto a punto le resto la media de ese mes calculada en 1
+
 """
+import numpy as np
+
+data=data_list[0]
+variable_data=data["cldamt"].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+variable_data.attrs["units"]="%" #cambio el nombre de la unidad
+
+veo=pd.DataFrame(variable_data.values)
+veo.columns=variable_data["lon"]
+veo.index=variable_data["lat"]
+
+veo_3D=pd.concat([veo,2*veo,3*veo],axis=1,keys=(["a","b","c"]))
+a=veo_3D["a"]
+b=veo_3D["b"]
+
+
+mean=(a+b)/2
+
+#seguir desde aca, ver como hacer la media mejor, como contar los indices por ejemplo
+
+data=data_list[0]
+variable_data=data["cldamt"].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+variable_data.attrs["units"]="%" #cambio el nombre de la unidad
+
+
+
+#data=data_list[indice_list]
+#variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+#variable_data.attrs["units"]=unidades_nombre #cambio el nombre de la unidad
+
+
+
 
 #%%
 """
@@ -246,6 +282,4 @@ Armo funcion que:
     Selecciona region
     Selecciona variables
 """
-
-
 
