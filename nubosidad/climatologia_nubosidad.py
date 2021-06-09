@@ -243,35 +243,42 @@ Calculo anomalias climaticas mensuales de variable. Tomo los anios enteros: 1984
 2) A cada mes de cada anio punto a punto le resto la media de ese mes calculada en 1
 
 """
-import numpy as np
 
-data=data_list[0]
-variable_data=data["cldamt"].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
-variable_data.attrs["units"]="%" #cambio el nombre de la unidad
+#hago un array 3d en donde cada capa es un campo mensual y calculo la media
+def media_mensual(data_list,variable,mes):
+    """
 
-veo=pd.DataFrame(variable_data.values)
-veo.columns=variable_data["lon"]
-veo.index=variable_data["lat"]
+    Parameters
+    ----------
+    data_list : list
+        lista en cada elemento un netcdf de un determinado mes y anio
+    variable : str
+        nombre variable
+    mes : str
+        numero de mes dos digitos
 
-veo_3D=pd.concat([veo,2*veo,3*veo],axis=1,keys=(["a","b","c"]))
-a=veo_3D["a"]
-b=veo_3D["b"]
+    Returns
+    -------
+    Data frame con media del mes seleccionado
 
+    """
+    import numpy as np
+    n=1
+    b=np.empty((1,180,360))
+    for i in range(0,len(data_list)):
+        if (str(data_list[i]["time"].values[0])[5:7]==mes):
+            variable_data=[data_list[i]["cldamt"].mean("time", keep_attrs=True).values]
+            b=np.concatenate([b,variable_data])
+            n=n+1
+            b=np.reshape(b,(n,180,360))
+    b=b[1:np.shape(b)[0],:,:]
+    media=np.mean(b,axis=0)
+    media=pd.DataFrame(media)
+    media.columns=data_list[1]["cldamt"]["lon"]
+    media.index=data_list[1]["cldamt"]["lat"]
+    return(media)
 
-mean=(a+b)/2
-
-#seguir desde aca, ver como hacer la media mejor, como contar los indices por ejemplo
-
-data=data_list[0]
-variable_data=data["cldamt"].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
-variable_data.attrs["units"]="%" #cambio el nombre de la unidad
-
-
-
-#data=data_list[indice_list]
-#variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
-#variable_data.attrs["units"]=unidades_nombre #cambio el nombre de la unidad
-
+media_enero=media_mensual(data_list,"cldamt","01")
 
 
 
