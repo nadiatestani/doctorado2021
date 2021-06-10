@@ -259,29 +259,61 @@ def media_mensual(data_list,variable,mes):
 
     Returns
     -------
-    Data frame con media del mes seleccionado
+    Array con media del mes seleccionado
 
     """
     import numpy as np
     n=1
-    b=np.empty((1,180,360))
+    arr_3D=np.empty((1,180,360))
     for i in range(0,len(data_list)):
         if (str(data_list[i]["time"].values[0])[5:7]==mes):
             variable_data=[data_list[i]["cldamt"].mean("time", keep_attrs=True).values]
-            b=np.concatenate([b,variable_data])
+            arr_3D=np.concatenate([arr_3D,variable_data])
             n=n+1
-            b=np.reshape(b,(n,180,360))
-    b=b[1:np.shape(b)[0],:,:]
-    media=np.mean(b,axis=0)
-    media=pd.DataFrame(media)
-    media.columns=data_list[1]["cldamt"]["lon"]
-    media.index=data_list[1]["cldamt"]["lat"]
-    return(media)
+            arr_3D=np.reshape(arr_3D,(n,180,360))
+    arr_3D=arr_3D[1:np.shape(arr_3D)[0],:,:]
+    media_mensual=np.mean(arr_3D,axis=0)
+    return(media_mensual)
 
+#por ejemplo:
 media_enero=media_mensual(data_list,"cldamt","01")
 
+#calculo la anomalia mensual restandole a cada mes la media de ese mes y lo agrego al xarray correspondiente de la lista data_list con nombre "media_climatologica_"+variable
+def anomalia_mensual(data_list,variable,mes):
+    """
 
+    Parameters
+    ----------
+    data_list : list
+        lista en cada elemento un netcdf de un determinado mes y anio
+    variable : str
+        nombre variable
+    mes : str
+        numero de mes dos digitos
 
+    Returns
+    -------
+    Array con media del mes seleccionado
+
+    """
+    import xarray as xr
+    import numpy as np
+
+    for i in range(0,len(data_list)):
+        if (str(data_list[i]["time"].values[0])[5:7]==mes):
+            variable_data=[data_list[i][variable].mean("time", keep_attrs=True).values]
+            anom=variable_data-media_mensual(data_list,variable,mes)
+            anom_dataarray=xr.DataArray(data=anom,dims=["time","lat","lon"])
+            data_list[i]=data_list[i].assign(variable_anom=anom_dataarray)
+            data_list[i]["variable_anom"].rename("anomalia_mensual_"+variable)
+    return(data_list)
+
+data_list_modificado=data_list.copy()
+data_list_modificado=anomalia_mensual(data_list_modificado,"cldamt","08")
+
+grafico_campos_nubosidad(paises,provincias,data_list_modificado,1,"media_climatologica_variable",-39,-16,-64,-31,"%",-50,50,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
+
+#va por aca GENIAL
 #%%
 """
 Armo funcion que:
