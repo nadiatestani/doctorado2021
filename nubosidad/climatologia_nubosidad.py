@@ -19,7 +19,7 @@ Para descargar la informacion use la opcion de descarga directa con este comando
 Uso este tutorial https://carpentrieslab.github.io/python-aos-lesson/02-visualisation/index.html para construir el codigo
 """
 
-#%% 
+#%%
 """
 Visualizo la informacion:
     Abro uno de los archivos .nc de nubosidad mensual
@@ -80,7 +80,7 @@ for i in range(0,cantidad_de_datos):
 defino funcion que grafica los campos de una determinada variable en una determinada region
 """
 
-def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida):
+def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color):
     """
     Parameters
     ----------
@@ -124,6 +124,7 @@ def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,la
         Nombre de la region
     ruta_salida : str
         Ruta donde se guardan los graficos
+    paleta_color: rain (de cero a positivos) / curl (para negativos y positivos)
 
     Returns
     -------
@@ -161,12 +162,21 @@ def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,la
     fig1 = plt.figure(figsize=[12,5],dpi=200)
     ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
 
-    variable_data_subset.plot.contourf(ax=ax,
+    if (paleta_color=="rain"):
+        variable_data_subset.plot.contourf(ax=ax,
                    levels=np.arange(valor_minimo, valor_maximo, delta_valor),
-                   extend='max',
+                   extend='neither',
                    transform=ccrs.PlateCarree(),
                    cbar_kwargs={'label': variable_data_subset.units},
                    cmap=cmocean.cm.rain)
+    
+    if (paleta_color=="curl"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.curl_r)
 
     ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
                   edgecolor='0.5',linewidth=0.7,alpha=0.8)
@@ -230,7 +240,7 @@ provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en m
 
 
 for i in range(0,cantidad_de_datos):
-    grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
+    grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos","rain")
 
 
 #%%
@@ -276,7 +286,7 @@ def media_mensual(data_list,variable,mes):
     return(media_mensual)
 
 #por ejemplo:
-media_enero=media_mensual(data_list,"cldamt","01")
+#media_enero=media_mensual(data_list,"cldamt","01")
 
 #calculo la anomalia mensual restandole a cada mes la media de ese mes y lo agrego al xarray correspondiente de la lista data_list con nombre "media_climatologica_"+variable
 def anomalia_mensual(data_list,variable,mes):
@@ -285,7 +295,7 @@ def anomalia_mensual(data_list,variable,mes):
     Parameters
     ----------
     data_list : list
-        lista en cada elemento un netcdf de un determinado mes y anio
+        lista en cada elemento un netcdf de un determinado mes y anio, cargar la lista para modificar
     variable : str
         nombre variable
     mes : str
@@ -293,27 +303,27 @@ def anomalia_mensual(data_list,variable,mes):
 
     Returns
     -------
-    Array con media del mes seleccionado
+    la lista con la variable de anomalia agregada al xarray
 
     """
     import xarray as xr
-    import numpy as np
-
     for i in range(0,len(data_list)):
         if (str(data_list[i]["time"].values[0])[5:7]==mes):
             variable_data=[data_list[i][variable].mean("time", keep_attrs=True).values]
             anom=variable_data-media_mensual(data_list,variable,mes)
             anom_dataarray=xr.DataArray(data=anom,dims=["time","lat","lon"])
             data_list[i]=data_list[i].assign(variable_anom=anom_dataarray)
-            data_list[i]["variable_anom"].rename("anomalia_mensual_"+variable)
+            data_list[i]=data_list[i].rename({"variable_anom":"anomalia_mensual_"+variable})
     return(data_list)
 
 data_list_modificado=data_list.copy()
-data_list_modificado=anomalia_mensual(data_list_modificado,"cldamt","08")
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+for i in range(0,12):
+    data_list_modificado=anomalia_mensual(data_list_modificado,"cldamt",meses[i])
 
-grafico_campos_nubosidad(paises,provincias,data_list_modificado,1,"media_climatologica_variable",-39,-16,-64,-31,"%",-50,50,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos")
 
-#va por aca GENIAL
+grafico_campos_nubosidad(paises,provincias,data_list_modificado,1,"anomalia_mensual_cldamt",-39,-16,-64,-31,"%",-50,55,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_anomalias_mensuales_campos","curl")
+
 #%%
 """
 Armo funcion que:
