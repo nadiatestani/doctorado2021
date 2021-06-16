@@ -32,6 +32,41 @@ nc_name="ISCCP-Basic.HGM.v01r00.GLOBAL.1986.07.99.9999.GPC.10KM.CS00.EA1.00.nc"
 dset=xr.open_dataset(nc_ruta+"/"+nc_name)
 print(dset)
 
+#ejemplo:
+dset["cldamt_types"].values[0][17] #para cada tipo de nube un array con el porcentaje de ese tipo de nube en cada celda. SOn 18 tipos de nubes
+len(dset["cldamt_types"].values[0][7][:,1]) #180 filas
+len(dset["cldamt_types"].values[0][7][1,:]) #360 columnas
+dset["cldamt_types"].description
+"""
+<xarray.DataArray 'cloud_type_label' (cloud_type: 18)>
+array([b'cumulus_liquid         (680 < PC <= 1025hPa, 0 <= TAU <= 3.55, TC >= 253K)      ',
+       b'stratocumulus_liquid   (680 < PC <= 1025hPa, 3.55 < TAU <= 22.63, TC >= 253K)   ',
+       b'stratus_liquid         (680 < PC <= 1025hPa, 22.63 < TAU <= 450, TC >= 253K)    ',
+       b'cumulus_ice            (680 < PC <= 1025hPa, 0 <= TAU <= 3.55, TC < 253K)       ',
+       b'stratocumulus_ice      (680 < PC <= 1025hPa, 3.55 < TAU <= 22.63, TC < 253K)    ',
+       b'stratus_ice            (680 < PC <= 1025hPa, 22.63 < TAU <= 450, TC < 253K)     ',
+       b'altocumulus_liquid     (440 < PC <= 680hPa, 0 <= TAU <= 3.55, TC >= 253K)       ',
+       b'altostratus_liquid     (440 < PC <= 680hPa, 3.55 < TAU <= 22.63, TC >= 253K)    ',
+       b'nimbostratus_liquid    (440 < PC <= 680hPa, 22.63 < TAU <= 450, TC >= 253K)     ',
+       b'altocumulus_ice        (440 < PC <= 680hPa, 0 <= TAU <= 3.55, TC < 253K)        ',
+       b'altostratus_ice        (440 < PC <= 680hPa, 3.55 < TAU <= 22.63, TC < 253K)     ',
+       b'nimbostratus_ice       (440 < PC <= 680hPa, 22.63 < TAU <= 450, TC < 253K)      ',
+       b'cirrus_liquid          (10 <= PC <= 440hPa, 0 <= TAU <= 3.55, TC >= 253K)       ',
+       b'cirrostratus_liquid    (10 <= PC <= 440hPa, 3.55 < TAU <= 22.63, TC >= 253K)    ',
+       b'deep_convective_liquid (10 <= PC <= 440hPa, 22.63 < TAU <= 450, TC >= 253K)     ',
+       b'cirrus_ice             (10 <= PC <= 440hPa, 0 <= TAU <= 3.55, TC < 253K)        ',
+       b'cirrostratus_ice       (10 <= PC <= 440hPa, 3.55 < TAU <= 22.63, TC < 253K)     ',
+       b'deep_convective_ice    (10 <= PC <= 440hPa, 22.63 < TAU <= 450, TC < 253K)      '],
+      dtype='|S80')
+Dimensions without coordinates: cloud_type
+Attributes:
+    long_name:  Cloud type label
+    units:      1
+"""
+
+
+dset["n_orig"] #Mean hourly frequency of occurance of mean cloud amount
+
 """
 Vemos:
     lon (longitudes) va de 0.5 a 359.5 (son 360 longitudes cada 1 grado)
@@ -72,7 +107,7 @@ data_list=[None]*cantidad_de_datos
 for i in range(0,cantidad_de_datos):
     data_list[i]=xr.open_dataset(nc_ruta+"/"+nc_name_list[i])
 
-#hago que los indices de la lista sean las fechas
+
 
 #%%
 
@@ -186,12 +221,12 @@ def grafico_campos_nubosidad(paises,provincias,data_list,indice_list,variable,la
 
     ax.coastlines(color='0.3')
 
-    ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::4])
-    plt.xticks(np.arange(xticks_min,xticks_max)[::4])
+    ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::8])
+    plt.xticks(np.arange(xticks_min,xticks_max)[::8])
     ax.set_xlabel("Longitud")
 
-    ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::4])
-    plt.yticks(np.arange(yticks_min,yticks_max)[::4])
+    ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::8])
+    plt.yticks(np.arange(yticks_min,yticks_max)[::8])
     ax.set_ylabel("Latitud")
 
     if (grid==True):
@@ -228,7 +263,13 @@ paises=MultiPolygon([df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Uruguay']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Bolivia']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Peru"]['geometry'].values[0]]) #los paso a multipolygon para poder graficarlos
+                     df.loc[df['ADMIN'] == "Colombia"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Ecuador"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Venezuela"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Guyana"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Suriname"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Panama"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == "Costa Rica"]['geometry'].values[0]]) #los paso a multipolygon para poder graficarlos
 
 #cargo shape con provincias de argentina con datos del IGN 
 #descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
@@ -242,6 +283,7 @@ provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en m
 for i in range(0,cantidad_de_datos):
     grafico_campos_nubosidad(paises,provincias,data_list,i,"cldamt",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos","rain")
 
+#grafico_campos_nubosidad(paises,provincias,data_list,5,"cldamt",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos","rain")
 
 #%%
 """
@@ -254,6 +296,67 @@ Calculo anomalias climaticas mensuales de variable. Tomo los anios enteros: 1984
 
 """
 
+#%%
+"""
+Calculo media climatologica por estación y por mes.
+Tomo de 1984 a 2016 (32 anios enteros)
+
+Guardo estas cantidades como xarrays y los incorporo a la lista con xarrays por mes.
+"""
+
+#hago un array 3d en donde cada capa es un campo mensual y calculo la media
+def media_mensual(data_list,variable,mes):
+    """
+
+    Parameters
+    ----------
+    data_list : list
+        lista en cada elemento un netcdf de un determinado mes y anio
+    variable : str
+        nombre variable
+    mes : str
+        numero de mes dos digitos
+
+    Returns
+    -------
+    Array con media del mes seleccionado
+
+    """
+    import numpy as np
+    n=1
+    arr_3D=np.empty((1,180,360))
+    for i in range(0,len(data_list)):
+        if (str(data_list[i]["time"].values[0])[5:7]==mes):
+            variable_data=[data_list[i][variable].mean("time", keep_attrs=True).values]
+            arr_3D=np.concatenate([arr_3D,variable_data])
+            n=n+1
+            arr_3D=np.reshape(arr_3D,(n,180,360))
+    arr_3D=arr_3D[1:np.shape(arr_3D)[0],:,:]
+    media_mensual=np.mean(arr_3D,axis=0)
+    return(media_mensual)
+
+#hago la media para cada mes y lo incorporo a una lista como xarray
+
+def media_mensual_xarray(data_list,variable,mes):
+    import numpy as np
+    import xarray as xr
+    data=media_mensual(data_list, variable, mes)
+    lats=data_list[2][variable].mean("time", keep_attrs=True)["lat"][:].values
+    lons=data_list[2][variable].mean("time", keep_attrs=True)["lon"][:].values
+    #dims=["lat", "lon"]
+    coords=[("lat", lats),("lon", lons)]
+    #coords=data_list[0][variable].coords
+    xarray_salida=xr.DataArray(data, coords=coords)
+    xarray_salida.name=variable+ " media mensual "+ mes
+    xarray_salida.attrs['units']="%"
+    xarray_salida.attrs['mes']=mes
+    return(xarray_salida)
+
+media_mensual_xarray(data_list,"cldamt","09")
+
+#lista_media_mensual=...
+#SEGUIR DESDE ACA
+#%%
 #hago un array 3d en donde cada capa es un campo mensual y calculo la media
 def media_mensual(data_list,variable,mes):
     """
