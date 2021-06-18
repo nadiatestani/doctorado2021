@@ -275,7 +275,7 @@ desvio_trimestral_cldamt_list[3]=media_desvio_trimestral(data_list_12_1983_11_20
 Defino funcion que grafica climatologia mensual de alguna variable definida previamente en una determinada region
 """
 
-def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon):
+def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion):
     """
     Parameters
     ----------
@@ -324,6 +324,8 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
     paleta_color: rain (de cero a positivos) / curl (para negativos y positivos) /matter (de cero a positivos en rosas)
     espacio_entre_lat_lon: float
         4 para region chica (menos separacion), 8 para region grande (mas separacion)
+    orientacion: str
+        "H": horizontal "V": vertical
     Returns
     -------
     Guarda graficos y los muestra.
@@ -391,7 +393,10 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
             mes="DEF"
             
     #ploteo
-    fig1 = plt.figure(figsize=[12,5],dpi=200)
+    if (orientacion=="H"):
+        fig1 = plt.figure(figsize=[9,5],dpi=200) #horizontal region 1
+    if (orientacion=="V"):
+        fig1 = plt.figure(figsize=[7.5,7.5],dpi=200) #vertical sudamerica
     ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
 
     if (paleta_color=="rain"):
@@ -427,11 +432,11 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
     ax.coastlines(color='0.3')
 
     ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
-    plt.xticks(np.arange(xticks_min,xticks_max)[::4])
+    plt.xticks(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
     ax.set_xlabel("Longitud")
 
     ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
-    plt.yticks(np.arange(yticks_min,yticks_max)[::4])
+    plt.yticks(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
     ax.set_ylabel("Latitud")
 
     if (grid==True):
@@ -441,6 +446,8 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
     #plt.tight_layout()
     plt.savefig(ruta_salida+"/"+variable+" "+region+" "+mes)
     plt.show()
+
+
 
 #%%
 """
@@ -483,21 +490,111 @@ for i in range(0,24):
     provincias[i]=IGN["geometry"][i]
 provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
 
-
+#ploteo para sudamerica 
 for i in range(0,12):
-    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_list,i,"cldamt media mensual (1984-2016)","mensual",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4)
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_list,i,"cldamt media mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",8,"V")
 
+import matplotlib.pyplot as plt
+plt.close(fig="all")
+    
 for i in range(0,12):
-    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-39,-16,-64,-31,"%",0,26,2,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4)
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
+
+plt.close(fig="all")
 
 for i in range(0,4):
-    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_list,i,"cldamt media trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4)
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_list,i,"cldamt media trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",8,"V")
+
+plt.close(fig="all")
 
 for i in range(0,4):
-    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,26,2,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4)
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+#ploteo para region 1
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_list,i,"cldamt media mensual (1984-2016)","mensual",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4,"H")
+
+plt.close(fig="all")
+
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-39,-16,-64,-31,"%",0,26,2,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",4,"H")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_list,i,"cldamt media trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4,"H")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,26,2,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",4,"H")
+
+#ploteo para region 2
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_list,i,"cldamt media mensual (1984-2016)","mensual",-32,-22,-64,-53,"%",0,101,5,-63,-53,-31,-22,True,"Región 2","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",2,"H")
+
+plt.close(fig="all")
+
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-32,-22,-64,-53,"%",0,26,2,-63,-53,-31,-22,True,"Región 2","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",2,"H")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_list,i,"cldamt media trimestral (1984-2016)","trimestral",-32,-22,-64,-53,"%",0,101,5,-63,-53,-31,-22,True,"Región 2","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",2,"H")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-32,-22,-64,-53,"%",0,26,2,-63,-53,-31,-22,True,"Región 2","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",2,"H")
+
+#%%
+"""
+veo como seleccionar region con shape
+https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan 
+https://gis.stackexchange.com/questions/289775/masking-netcdf-data-using-shapefile-xarray-geopandas
+"""
+import xarray as xr
+import rioxarray
+from shapely.geometry import mapping, Polygon
+import geopandas as gpd
+
+world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+US=world[world['name']=='United States of America']  # conus, AK, HI, PR
+US.geometry.apply(mapping)
+veo=provincias[19].exterior.coords[:]
+veo=Polygon(veo)
+veoveo=MultiPolygon([veo])
+
+veo=IGN.geometry[19]
+
+veoveo=IGN.geometry[19]
+IGN.geometry[0].apply(mapping)
+
+#geometries=provincias[19].exterior.coords[:] #esto extrae coordenadas del borde de la provincia. Lo hace como lista, lo puedo pasar a array. 
+#geometries=Polygon(geometries)
+
+#geometries=MultiPolygon(geometries)
+#xds = media_mensual_cldamt_list[0].rio.write_crs("epsg:4326", inplace=True)
+xds = media_mensual_cldamt_list[0]
+xds=xds.sel(lat=slice(-32.5,-22.5),lon=slice(360-64.5,360-53.5))
+xds=xds.rio.write_crs("epsg:4326",inplace=True)
+
+clipped = xds.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs)#,drop=False, invert=False)
+
+IGN.geometry.apply(mapping)[19]
+type(IGN.geometry.apply(mapping)[19])
+veo=IGN.geometry[19][0]
+
+veo_1=gpd.GeoDataFrame(IGN.geometry[19])
+veo_1[0][0]
 
 
-#grafico_campos_nubosidad(paises,provincias,data_list,5,"cldamt",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos","rain")
+xds = media_mensual_cldamt_list[0].rio.write_crs("epsg:4326",inplace=True)
+
+
 #%%
 
 """
