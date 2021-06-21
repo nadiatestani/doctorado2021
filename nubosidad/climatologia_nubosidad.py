@@ -557,9 +557,12 @@ https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-net
 https://gis.stackexchange.com/questions/289775/masking-netcdf-data-using-shapefile-xarray-geopandas
 """
 import xarray as xr
-import rioxarray
+import rioxarray as rio
 from shapely.geometry import mapping, Polygon
 import geopandas as gpd
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+
 
 world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
 US=world[world['name']=='United States of America']  # conus, AK, HI, PR
@@ -582,18 +585,192 @@ xds = media_mensual_cldamt_list[0]
 xds=xds.sel(lat=slice(-32.5,-22.5),lon=slice(360-64.5,360-53.5))
 xds=xds.rio.write_crs("epsg:4326",inplace=True)
 
-clipped = xds.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs)#,drop=False, invert=False)
+
+xds=media_mensual_cldamt_list[0]
+xds_veo=xds.rio.write_crs(IGN.crs)
+
+clipped = xds_veo.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
+clipped = xds_veo.rio.clip(IGN.geometry[19][0],IGN.crs)#,drop=False, invert=False)
+
 
 IGN.geometry.apply(mapping)[19]
 type(IGN.geometry.apply(mapping)[19])
 veo=IGN.geometry[19][0]
 
-veo_1=gpd.GeoDataFrame(IGN.geometry[19])
-veo_1[0][0]
-
+float(veo.wkt)
 
 xds = media_mensual_cldamt_list[0].rio.write_crs("epsg:4326",inplace=True)
 
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
+
+geometria=newconus.geometry.apply(mapping) #lon lat lon lat lon lat
+
+newconus.crs
+xds=data_list[0].cldamt
+xds=xds.rio.write_crs("epsg:4326", inplace=True)
+#xds=xds.transpose(transpose_coords=True)
+clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=True) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
+#esto tira el error este: DimensionError: x dimension not found. 'set_spatial_dims()' can address this.
+#voy a cambiar los nombres de lon y lat por x y o algo asi-
+
+#The issue you are facing is that rioxarray expects your spatial dimensions and coordinate to have the same name. I would recommend using the rename methods of in xarray to rename the dimensions and coordinates so they are both longitide and latitude or x and y.
+
+xds=xds.rio.set_spatial_dims("x", "y", inplace=True) #no funciona pruebo otra cosa
+
+###############################ESTAS LINEAS PARECEN FUNCIONAR##########################
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
+xds=data_list[0].cldamt
+xds=xds.swap_dims({"lon": "x"})
+xds=xds.swap_dims({"lat": "y"})
+xds=xds.rio.write_crs("epsg:4326", inplace=True)
+clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
+
+#The problem here is that polygon in the geodataframe uses longitudes -180 to 180 whereas my netcdf data uses longitudes 0 to 360. Modifico el xarray a ver...
+
+#xds=xds.assign_coords(lon=(xds.lon - 180)) #fijarme si es asi o es que le tengo que sumar al polygon, creo que es la segunda opcion!! porque estoy siemrpe trabajando de 0 a 360 no? bueno ver desde aca que tal 
+#xds.lon
+
+#me genera otras coordenadas x y en el clipped respecto al xds. Busco cambiar los nombres POSTA de las coordenadas. 
+#no es esto, lo que esta raro es la latitud!!! ver en grafico como queda. Quizas estan invertidas lon y lats? 
+coords=np.array(IGN.geometry[19][0].exterior.coords)
+coords[:,0]=coords[:,0]+360 #ver si sumo 180 o 360
+coords[:,1]=coords[:,1]+90
+newpoly=Polygon(coords)
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
+
+coords=np.array(IGN.geometry[19][0].exterior.coords)
+#invierto coordenadas a ver si se soluciona
+veo=coords.copy()
+veo[:,1]=coords[:,0]
+veo[:,0]=coords[:1]
+newpoly=Polygon(veo)
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
+#no funciona
+
+#seguir guiandome de aca: https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
+######################################################################################
+    #cargo lats y lons para armar xarray
+ #   lats=data_list[0][variable].mean("time", keep_attrs=True)["lat"][:].values
+ #   lons=data_list[0][variable].mean("time", keep_attrs=True)["lon"][:].values
+ #   coords=[("lat", lats),("lon", lons)]
+
+lats=xds[0]["lat"][:].values
+lons=xds[0]["lon"][:].values
+coords=[("y",lats),("x",lons)]
+
+xds=xr.DataArray(data_list[0].cldamt.values[0], coords=coords)
+
+#####GRAFICO
+plottime='1983-07-15'
+fig=plt.figure(figsize=(10,10))
+ax1=fig.add_subplot(211,projection=ccrs.PlateCarree())
+clipped.sel(time=plottime).plot(ax=ax1)
+newconus.boundary.plot(ax=ax1,color='black')
+plt.title("clipped pr invert=True")
+
+
+fig=plt.figure(figsize=(10,10))
+ax1=fig.add_subplot(211,projection=ccrs.PlateCarree())
+clipped.plot(ax=ax1)
+newconus.boundary.plot(ax=ax1,color='black')
+plt.title("clipped pr invert=True")
+
+
+##########################################
+clipped = xds.rio.clip(newconus.geometry.apply(mapping)[0],newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
+
+
+clipped=xds.rio.clip(int(float(str(geometria[0]["coordinates"][0]))),newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
+plt.plot(clipped)
+clipped = xds.rio.clip(int(float(str(geometria[0]["coordinates"][0]))),newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
+
+clipped = xds_veo.rio.clip(newconus.geometry,newconus.crs,drop=False, invert=False)
+
+xds=xds.rio.set_spatial_dims('lon', 'lat', inplace=True)
+obs_dataset_full.rio.set_spatial_dims('x', 'y', inplace=True)
+
+
+row=next(IGN.iterrows())[1]
+row=IGN[IGN.gid==19]
+coords=np.array(row['geometry'][0].exterior.coords)
+coords[:,0]=coords[:,0]+360.
+newpoly=Polygon(coords)
+newconus = gpd.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[newpoly])
+
+clipped = xds_veo.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
+
+#ejemplo
+world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+conus=world[world['name']=='United States of America']  # conus, AK, HI, PR
+conus.geometry
+
+modDS=xr.open_dataset("/home/nadia/Descargas/regrid_pr_Amon_ACCESS1-0_historical_r1i1p1_190601-200512.nc")
+pr=modDS.pr
+pr=pr.rio.write_crs("epsg:4326", inplace=True)
+
+clipped = pr.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
+
+
+
+#### ESTO ES LO QUE FUNCIONA #####
+
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
+xds=data_list[0].cldamt
+xds=xds.swap_dims({"lon": "x"})
+xds=xds.swap_dims({"lat": "y"})
+
+#clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
+
+coords=np.array(IGN.geometry[19][0].exterior.coords)
+coords[:,0]=coords[:,0]+360 #ver si sumo 180 o 360
+newpoly=Polygon(coords)
+newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
+
+lats=xds[0]["lat"][:].values
+lons=xds[0]["lon"][:].values
+coords=[("y",lats),("x",lons)]
+
+xds=xr.DataArray(data_list[0].cldamt.values[0], coords=coords)
+xds=xds.rio.write_crs("epsg:4326", inplace=True)
+clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
+
+
+#selecciono region
+lats=clipped["y"][:]
+lons=clipped["x"][:]
+lat_lims=[-30,-27]
+lon_lims=[300,305] #lean 360-64 (64 O) 360-31 (31 O) 
+lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+clipped_subset=clipped[lat_inds,lon_inds]
+
+
+
+fig=plt.figure(figsize=(10,10))
+ax1=fig.add_subplot(projection=ccrs.PlateCarree(central_longitude=0))
+ax1.coastlines(color='0.3')
+
+clipped_subset.plot.contourf(ax=ax1,
+                   levels=np.arange(0, 100, 5),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   #cbar_kwargs={'label': variable_data_subset.units},
+                   #cmap=cmocean.cm.rain)
+                   )
+newconus.boundary.plot(ax=ax1,color='black',transform=ccrs.PlateCarree())
+
+ax1.set_xticklabels(np.arange(-60,-55)[::1])
+plt.xticks(np.arange(-60,-55)[::1])
+ax1.set_xlabel("Longitud")
+
+ax1.set_yticklabels(np.arange(-30,-26)[::1])
+plt.yticks(np.arange(-30,-26)[::1])
+ax1.set_ylabel("Latitud")
+
+
+plt.title("clipped pr invert=True")
+
+#VER QUE TENGO QUE CAMBIAR PARA QUE ME CUBRA TODA LA PROVINCIA. QUIZAS TENGA QUE EXTRAPOLAR O ALGO ASI. 
 
 #%%
 
