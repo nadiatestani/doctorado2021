@@ -734,11 +734,24 @@ xds=xr.DataArray(data_list[0].cldamt.values[0], coords=coords)
 xds=xds.rio.write_crs("epsg:4326", inplace=True)
 clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
 
+#Pasa que con el tamaño de las grillas quedan muchos lugares en blanco en la provincia. 
+#Veo que incluya un area un poco mas grande que corrientes 
+
+## Voy a buscar re grid el xarray para que en lugar de ser de 1ºx1º sea de 0.1ºx0.1º asi queda mejor adentro de corrientes cuando lo clipeo. Lo hago con el metodo de interpolacion del vecino mas cercano https://stackoverflow.com/questions/49973049/how-to-re-gridding-xarray-from-higher-to-lower-resolution-using-idw 
+
+ynuevo=np.linspace(-89.5, 89.5, 3600)
+xnuevo=np.linspace(0.5, 359.5, 7200)
+xds_2=xds.reindex(y=ynuevo,x=xnuevo, method="nearest") 
+xds_3=xds.interp(y=ynuevo,x=xnuevo,method="linear")#ESTA ES LA QUE VA http://xarray.pydata.org/en/stable/generated/xarray.DataArray.interp.html 
+
+
+clipped = xds_2.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
+clipped = xds_3.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False) #ESTA ES LA QUE VA
 
 #selecciono region
 lats=clipped["y"][:]
 lons=clipped["x"][:]
-lat_lims=[-30,-27]
+lat_lims=[-31,-27]
 lon_lims=[300,305] #lean 360-64 (64 O) 360-31 (31 O) 
 lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
 lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
@@ -763,14 +776,14 @@ ax1.set_xticklabels(np.arange(-60,-55)[::1])
 plt.xticks(np.arange(-60,-55)[::1])
 ax1.set_xlabel("Longitud")
 
-ax1.set_yticklabels(np.arange(-30,-26)[::1])
-plt.yticks(np.arange(-30,-26)[::1])
+ax1.set_yticklabels(np.arange(-31,-26)[::1])
+plt.yticks(np.arange(-31,-26)[::1])
 ax1.set_ylabel("Latitud")
 
 
 plt.title("clipped pr invert=True")
 
-#VER QUE TENGO QUE CAMBIAR PARA QUE ME CUBRA TODA LA PROVINCIA. QUIZAS TENGA QUE EXTRAPOLAR O ALGO ASI. 
+
 
 #%%
 
