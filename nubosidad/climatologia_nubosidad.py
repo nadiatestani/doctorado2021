@@ -272,7 +272,101 @@ desvio_trimestral_cldamt_list[3]=media_desvio_trimestral(data_list_12_1983_11_20
 
 #%%
 """
-Defino funcion que grafica climatologia mensual de alguna variable definida previamente en una determinada region
+Recorto los xarrays de la climatologia para el shape de Corrientes
+Armo funcion que selecciona region de xarray con shape
+https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan 
+https://gis.stackexchange.com/questions/289775/masking-netcdf-data-using-shapefile-xarray-geopandas
+"""
+
+import numpy as np
+import xarray as xr
+import rioxarray as rio
+from shapely.geometry import mapping, Polygon
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+
+def clip_xarray_con_shape(coords,xarray_lista, numero_elemento_lista):
+    """
+    
+
+    Parameters
+    ----------
+    coords : np.array
+        Coordenadas del borde del shape que se quiere recortar. Por ejemplo: IGN=geopandas.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp"); coords=np.array(IGN.geometry[19][0].exterior.coords)
+    xarray_lista: list
+        lista con arrays que se quieren recortar. Es decir: media_mensual_cldamt_list[numero_elemento_lista] 
+    numero_elemento_lista: float
+        numero del elemento de la lista
+    Returns
+    -------
+    List con primer elemento: xarray recortado, segundo elemento: shape que se recorto
+
+    """
+    coords[:,0]=coords[:,0]+360 #sumo 360 a las longitudes para que tenga la misma referencia que los xarrays
+    newpoly=Polygon(coords) #armo poligono
+    newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly]) #georeferencio el poligono
+
+    #cargo xarray para recortar cambio el nombre de las dimensiones a x,y 
+    xds=xarray_lista[numero_elemento_lista]
+    xds_nombre=xds.name
+    xds=xds.swap_dims({"lon": "x"})
+    xds=xds.swap_dims({"lat": "y"})
+
+    lats=xds["lat"][:].values
+    lons=xds["lon"][:].values
+    coords_2=[("y",lats),("x",lons)]
+    
+    xds=xr.DataArray(xarray_lista[numero_elemento_lista].values, coords=coords_2)
+    xds=xds.rio.write_crs("epsg:4326", inplace=True) #georeferencio
+    
+    #lo regrillo para que pase de ser 1ºx1º a 0.05ºx0.05º asi se recorta bien. Lo hago con el metodo de interpolacion lineal. el regrillado lo hago solo en un entorno a corrientes para ahorrar memoria
+    #ynuevo=np.linspace(-89.5, 89.5, 3600)
+    #xnuevo=np.linspace(0.5, 359.5, 7200)
+    ynuevo=np.linspace(-31.5, -25.5, 60)
+    xnuevo=np.linspace(280.5, 315.5, 350)
+    xds=xds.interp(y=ynuevo,x=xnuevo,method="linear")# http://xarray.pydata.org/en/stable/generated/xarray.DataArray.interp.html 
+    
+    clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False) #lo recorto
+    clipped.name=xds_nombre
+    #clipped.attrs['units']=xds.attrs['units']
+    #clipped.attrs['mes']=xds.attrs['mes']
+    return(clipped,newconus)
+
+#%%
+"""
+Corro esta funcion y armo lista con los estadisticos (media y desvio) recortados en la provincia de Corrientes mensual y trimestral
+"""
+
+IGN=gpd.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
+
+#armo lista con medias y desvios mensuales de cldamt
+
+media_mensual_cldamt_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_mensual_cldamt_list_clipped[i]=clip_xarray_con_shape(coords, media_mensual_cldamt_list, i)[0]
+
+desvio_mensual_cldamt_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_mensual_cldamt_list_clipped[i]=clip_xarray_con_shape(coords, desvio_mensual_cldamt_list, i)[0]
+
+#armo lista con medias y desvios trimestrales de cldamt
+
+media_trimestral_cldamt_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_trimestral_cldamt_list_clipped[i]=clip_xarray_con_shape(coords, media_trimestral_cldamt_list, i)[0]
+
+desvio_trimestral_cldamt_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_trimestral_cldamt_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_list, i)[0]
+
+#%%
+"""
+Defino funcion que grafica climatologia mensual de alguna variable definida previamente en una determinada region (region cuadrada)
 """
 
 def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion):
@@ -447,6 +541,185 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
     plt.savefig(ruta_salida+"/"+variable+" "+region+" "+mes)
     plt.show()
 
+#%%
+"""
+Defino funcion que grafica climatologia mensual de alguna variable definida previamente en una determinada region (region con shape)
+"""
+
+def grafico_campos_climatologia_nubosidad_clip(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion):
+    """
+    Parameters
+    ----------
+    paises : shapely.geometry.multipolygon.MultiPolygon
+        shape con paises a graficar en mapa
+    provincias : shapely.geometry.multipolygon.MultiPolygon
+        shape con provincias a graficar en mapa
+    data_list_climatologia : list
+        lista con data climatologica, en cada elemento de la lista hay un NetCDF i.e un xarray.core.dataset.Dataset
+    indice_list : float
+        indice del elemento de la lista a abrir
+    variable : string
+        nombre de la variable de los NetCDF a graficar
+    climatologia_tipo: string
+        "mensual" o "trimestral" 
+    lat_min : float
+        latitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lat_max : float
+        latitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lon_min : float
+        longitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    lon_max : float
+        longitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    unidades_nombre : string
+        nombre que se desea para las unidades de la variable, aparece en el grafico
+    valor_minimo : float
+        valor minimo que toma la escala de la variable
+    valor_maximo : float
+        valor maximo que toma la escala de la variable
+    delta_valor : float
+        intervalo entre valores de la escala de la variable
+    xticks_min : float
+        minimo de longitud que se marca en el grafico en grados oeste con el signo -
+    xticks_max : float
+        maximo de longitud que se marca en el grafico en grados oeste con el signo -
+    yticks_min : float
+        minimo de latitud que se marca en el grafico en grados sur con el signo -.
+    yticks_max : float
+        maximo de latitud que se marca en el grafico en grados sur con el signo -.
+    grid : optional
+        The default is True.
+    region: string
+        Nombre de la region
+    ruta_salida : str
+        Ruta donde se guardan los graficos
+    paleta_color: rain (de cero a positivos) / curl (para negativos y positivos) /matter (de cero a positivos en rosas)
+    espacio_entre_lat_lon: float
+        4 para region chica (menos separacion), 8 para region grande (mas separacion)
+    orientacion: str
+        "H": horizontal "V": vertical
+    Returns
+    -------
+    Guarda graficos y los muestra.
+
+    """
+    #carga librerias necesarias
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cmocean
+    
+    #limpio graficos
+    plt.close()
+    
+    #selecciona variable
+    variable_data=data_list_climatologia[indice_list]
+    #variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+    #variable_data.attrs["units"]=unidades_nombre #cambio el nombre de la unidad
+
+    #selecciono region
+    lats=variable_data["y"][:]
+    lons=variable_data["x"][:]
+    lat_lims=[lat_min,lat_max]
+    lon_lims=[360+lon_min,360+lon_max] #lean 360-64 (64 O) 360-31 (31 O) 
+    lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+    lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+    variable_data_subset=variable_data[lat_inds,lon_inds]
+
+    #extraigo mes (climatologia mensual) o meses (climatologia trimestral)
+    if (climatologia_tipo=="mensual"):
+            meses=str(data_list_climatologia[indice_list].name)[-2]+str(data_list_climatologia[indice_list].name)[-1]
+            if (meses=="01"):
+                mes1="Enero"
+            if (meses=="02"):
+                mes1="Febrero"
+            if (meses=="03"):
+                mes1="Marzo"
+            if (meses=="04"):
+                mes1="Abril"
+            if (meses=="05"):
+                mes1="Mayo"
+            if (meses=="06"):
+                mes1="Junio"
+            if (meses=="07"):
+                mes1="Julio"
+            if (meses=="08"):
+                mes1="Agosto"
+            if (meses=="09"):
+                mes1="Septiembre"
+            if (meses=="10"):
+                mes1="Octubre"
+            if (meses=="11"):
+                mes1="Noviembre"
+            if (meses=="12"):
+                mes1="Diciembre"
+
+    if (climatologia_tipo=="trimestral"):
+        meses=str(data_list_climatologia[indice_list].name)[-8:-1]+str(data_list_climatologia[indice_list].name)[-1]
+        if (meses=="03-04-05"):
+            mes1="MAM"
+        if (meses=="06-07-08"):
+            mes1="JJA"
+        if (meses=="09-10-11"):
+            mes1="SON"
+        if (meses=="12-01-02"):
+            mes1="DEF"
+    
+    #ploteo
+    if (orientacion=="H"):
+        fig1 = plt.figure(figsize=[9,5],dpi=200) #horizontal region 1
+    if (orientacion=="V"):
+        fig1 = plt.figure(figsize=[7.5,7.5],dpi=200) #vertical sudamerica
+    ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
+
+    if (paleta_color=="rain"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': unidades_nombre},
+                   cmap=cmocean.cm.rain)
+    
+    if (paleta_color=="curl"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': unidades_nombre},
+                   cmap=cmocean.cm.curl_r)
+
+    if (paleta_color=="matter"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': unidades_nombre},
+                   cmap=cmocean.cm.matter)
+        
+    ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.5',linewidth=0.7,alpha=0.8)
+
+    ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.4',alpha=0.8)
+
+    ax.coastlines(color='0.3')
+
+    ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
+    plt.xticks(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
+    ax.set_xlabel("Longitud")
+
+    ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
+    plt.yticks(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
+    ax.set_ylabel("Latitud")
+
+    if (grid==True):
+        plt.grid(linestyle="--", alpha=0.3)
+
+    #plt.title(variable+" "+region)
+    plt.title(variable+" "+region+" "+mes1)
+    ##plt.tight_layout()
+    plt.savefig(ruta_salida+"/"+variable+" "+region+" "+mes1)
+    plt.show()
+
+
 
 
 #%%
@@ -490,6 +763,7 @@ for i in range(0,24):
     provincias[i]=IGN["geometry"][i]
 provincias=MultiPolygon(provincias) #paso a multipolygon para poder ponerlo en mapa
 
+#%%
 #ploteo para sudamerica 
 for i in range(0,12):
     grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_list,i,"cldamt media mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",8,"V")
@@ -550,239 +824,56 @@ plt.close(fig="all")
 for i in range(0,4):
     grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-32,-22,-64,-53,"%",0,26,2,-63,-53,-31,-22,True,"Región 2","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",2,"H")
 
+#PLOTEO PARA CORRIENTES
+#plt.close(fig="all")
+
+#paleta1
+#for i in range(0,12):
+#    grafico_campos_climatologia_nubosidad_clip(paises,provincias,media_mensual_cldamt_list_clipped,i,"cldamt media mensual (1984-2016)","mensual",-31,-26,-60,-55,"%",0,101,5,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",1,"H")
+
+plt.close(fig="all")
+
+#paleta2
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad_clip(paises,provincias,media_mensual_cldamt_list_clipped,i,"cldamt media mensual (1984-2016)","mensual",-31,-26,-60,-55,"%",40,70,1,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",1,"H")
+
+
+#plt.close(fig="all")
+
+#for i in range(0,12):
+#    grafico_campos_climatologia_nubosidad_clip(paises,provincias,desvio_mensual_cldamt_list_clipped,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-31,-26,-60,-55,"%",0,26,2,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",1,"H")
+
+#paleta2
+plt.close(fig="all")
+
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad_clip(paises,provincias,desvio_mensual_cldamt_list_clipped,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-31,-26,-60,-55,"%",0,14,1,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",1,"H")
+
+#plt.close(fig="all")
+
+#for i in range(0,4):
+#    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_list,i,"cldamt media trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,101,5,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",4,"H")
+
+#paleta2
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad_clip(paises,provincias,media_trimestral_cldamt_list_clipped,i,"cldamt media trimestral (1984-2016)","trimestral",-31,-26,-60,-55,"%",40,70,1,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","rain",1,"H")
+
+
+#plt.close(fig="all")
+
+#for i in range(0,4):
+#    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-39,-16,-64,-31,"%",0,26,2,-60,-31,-35,-18,True,"Región 1","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",4,"H")
+
+#paleta2
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad_clip(paises,provincias,desvio_trimestral_cldamt_list_clipped,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-31,-26,-60,-55,"%",0,14,1,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",1,"H")
+
+
 #%%
-"""
-veo como seleccionar region con shape
-https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan 
-https://gis.stackexchange.com/questions/289775/masking-netcdf-data-using-shapefile-xarray-geopandas
-"""
-import xarray as xr
-import rioxarray as rio
-from shapely.geometry import mapping, Polygon
-import geopandas as gpd
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-
-
-world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-US=world[world['name']=='United States of America']  # conus, AK, HI, PR
-US.geometry.apply(mapping)
-veo=provincias[19].exterior.coords[:]
-veo=Polygon(veo)
-veoveo=MultiPolygon([veo])
-
-veo=IGN.geometry[19]
-
-veoveo=IGN.geometry[19]
-IGN.geometry[0].apply(mapping)
-
-#geometries=provincias[19].exterior.coords[:] #esto extrae coordenadas del borde de la provincia. Lo hace como lista, lo puedo pasar a array. 
-#geometries=Polygon(geometries)
-
-#geometries=MultiPolygon(geometries)
-#xds = media_mensual_cldamt_list[0].rio.write_crs("epsg:4326", inplace=True)
-xds = media_mensual_cldamt_list[0]
-xds=xds.sel(lat=slice(-32.5,-22.5),lon=slice(360-64.5,360-53.5))
-xds=xds.rio.write_crs("epsg:4326",inplace=True)
-
-
-xds=media_mensual_cldamt_list[0]
-xds_veo=xds.rio.write_crs(IGN.crs)
-
-clipped = xds_veo.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
-clipped = xds_veo.rio.clip(IGN.geometry[19][0],IGN.crs)#,drop=False, invert=False)
-
-
-IGN.geometry.apply(mapping)[19]
-type(IGN.geometry.apply(mapping)[19])
-veo=IGN.geometry[19][0]
-
-float(veo.wkt)
-
-xds = media_mensual_cldamt_list[0].rio.write_crs("epsg:4326",inplace=True)
-
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
-
-geometria=newconus.geometry.apply(mapping) #lon lat lon lat lon lat
-
-newconus.crs
-xds=data_list[0].cldamt
-xds=xds.rio.write_crs("epsg:4326", inplace=True)
-#xds=xds.transpose(transpose_coords=True)
-clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=True) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
-#esto tira el error este: DimensionError: x dimension not found. 'set_spatial_dims()' can address this.
-#voy a cambiar los nombres de lon y lat por x y o algo asi-
-
-#The issue you are facing is that rioxarray expects your spatial dimensions and coordinate to have the same name. I would recommend using the rename methods of in xarray to rename the dimensions and coordinates so they are both longitide and latitude or x and y.
-
-xds=xds.rio.set_spatial_dims("x", "y", inplace=True) #no funciona pruebo otra cosa
-
-###############################ESTAS LINEAS PARECEN FUNCIONAR##########################
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
-xds=data_list[0].cldamt
-xds=xds.swap_dims({"lon": "x"})
-xds=xds.swap_dims({"lat": "y"})
-xds=xds.rio.write_crs("epsg:4326", inplace=True)
-clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
-
-#The problem here is that polygon in the geodataframe uses longitudes -180 to 180 whereas my netcdf data uses longitudes 0 to 360. Modifico el xarray a ver...
-
-#xds=xds.assign_coords(lon=(xds.lon - 180)) #fijarme si es asi o es que le tengo que sumar al polygon, creo que es la segunda opcion!! porque estoy siemrpe trabajando de 0 a 360 no? bueno ver desde aca que tal 
-#xds.lon
-
-#me genera otras coordenadas x y en el clipped respecto al xds. Busco cambiar los nombres POSTA de las coordenadas. 
-#no es esto, lo que esta raro es la latitud!!! ver en grafico como queda. Quizas estan invertidas lon y lats? 
-coords=np.array(IGN.geometry[19][0].exterior.coords)
-coords[:,0]=coords[:,0]+360 #ver si sumo 180 o 360
-coords[:,1]=coords[:,1]+90
-newpoly=Polygon(coords)
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
-
-coords=np.array(IGN.geometry[19][0].exterior.coords)
-#invierto coordenadas a ver si se soluciona
-veo=coords.copy()
-veo[:,1]=coords[:,0]
-veo[:,0]=coords[:1]
-newpoly=Polygon(veo)
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
-#no funciona
-
-#seguir guiandome de aca: https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
-######################################################################################
-    #cargo lats y lons para armar xarray
- #   lats=data_list[0][variable].mean("time", keep_attrs=True)["lat"][:].values
- #   lons=data_list[0][variable].mean("time", keep_attrs=True)["lon"][:].values
- #   coords=[("lat", lats),("lon", lons)]
-
-lats=xds[0]["lat"][:].values
-lons=xds[0]["lon"][:].values
-coords=[("y",lats),("x",lons)]
-
-xds=xr.DataArray(data_list[0].cldamt.values[0], coords=coords)
-
-#####GRAFICO
-plottime='1983-07-15'
-fig=plt.figure(figsize=(10,10))
-ax1=fig.add_subplot(211,projection=ccrs.PlateCarree())
-clipped.sel(time=plottime).plot(ax=ax1)
-newconus.boundary.plot(ax=ax1,color='black')
-plt.title("clipped pr invert=True")
-
-
-fig=plt.figure(figsize=(10,10))
-ax1=fig.add_subplot(211,projection=ccrs.PlateCarree())
-clipped.plot(ax=ax1)
-newconus.boundary.plot(ax=ax1,color='black')
-plt.title("clipped pr invert=True")
-
-
-##########################################
-clipped = xds.rio.clip(newconus.geometry.apply(mapping)[0],newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
-
-
-clipped=xds.rio.clip(int(float(str(geometria[0]["coordinates"][0]))),newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
-plt.plot(clipped)
-clipped = xds.rio.clip(int(float(str(geometria[0]["coordinates"][0]))),newconus.crs,drop=False, invert=False) #ESTO TENDRIA QUE FUNCIONAR tiene que haber algo mal en el xds
-
-clipped = xds_veo.rio.clip(newconus.geometry,newconus.crs,drop=False, invert=False)
-
-xds=xds.rio.set_spatial_dims('lon', 'lat', inplace=True)
-obs_dataset_full.rio.set_spatial_dims('x', 'y', inplace=True)
-
-
-row=next(IGN.iterrows())[1]
-row=IGN[IGN.gid==19]
-coords=np.array(row['geometry'][0].exterior.coords)
-coords[:,0]=coords[:,0]+360.
-newpoly=Polygon(coords)
-newconus = gpd.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[newpoly])
-
-clipped = xds_veo.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
-
-#ejemplo
-world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-conus=world[world['name']=='United States of America']  # conus, AK, HI, PR
-conus.geometry
-
-modDS=xr.open_dataset("/home/nadia/Descargas/regrid_pr_Amon_ACCESS1-0_historical_r1i1p1_190601-200512.nc")
-pr=modDS.pr
-pr=pr.rio.write_crs("epsg:4326", inplace=True)
-
-clipped = pr.rio.clip(IGN.geometry.apply(mapping)[19],IGN.crs,drop=False, invert=False)
-
-
-
-#### ESTO ES LO QUE FUNCIONA #####
-
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[IGN.geometry[19][0]])  #esto esta bien, queda igual que tutorial la forma del poligono que recorta https://gis.stackexchange.com/questions/382037/python-rioxarray-clip-masking-netcdf-data-with-a-polygon-returns-all-nan
-xds=data_list[0].cldamt
-xds=xds.swap_dims({"lon": "x"})
-xds=xds.swap_dims({"lat": "y"})
-
-#clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
-
-coords=np.array(IGN.geometry[19][0].exterior.coords)
-coords[:,0]=coords[:,0]+360 #ver si sumo 180 o 360
-newpoly=Polygon(coords)
-newconus=gpd.GeoDataFrame(index=[0], crs="epsg:4326", geometry=[newpoly])
-
-lats=xds[0]["lat"][:].values
-lons=xds[0]["lon"][:].values
-coords=[("y",lats),("x",lons)]
-
-xds=xr.DataArray(data_list[0].cldamt.values[0], coords=coords)
-xds=xds.rio.write_crs("epsg:4326", inplace=True)
-clipped = xds.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
-
-#Pasa que con el tamaño de las grillas quedan muchos lugares en blanco en la provincia. 
-#Veo que incluya un area un poco mas grande que corrientes 
-
-## Voy a buscar re grid el xarray para que en lugar de ser de 1ºx1º sea de 0.1ºx0.1º asi queda mejor adentro de corrientes cuando lo clipeo. Lo hago con el metodo de interpolacion del vecino mas cercano https://stackoverflow.com/questions/49973049/how-to-re-gridding-xarray-from-higher-to-lower-resolution-using-idw 
-
-ynuevo=np.linspace(-89.5, 89.5, 3600)
-xnuevo=np.linspace(0.5, 359.5, 7200)
-xds_2=xds.reindex(y=ynuevo,x=xnuevo, method="nearest") 
-xds_3=xds.interp(y=ynuevo,x=xnuevo,method="linear")#ESTA ES LA QUE VA http://xarray.pydata.org/en/stable/generated/xarray.DataArray.interp.html 
-
-
-clipped = xds_2.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False)
-clipped = xds_3.rio.clip(newconus.geometry.apply(mapping),newconus.crs,drop=False, invert=False) #ESTA ES LA QUE VA
-
-#selecciono region
-lats=clipped["y"][:]
-lons=clipped["x"][:]
-lat_lims=[-31,-27]
-lon_lims=[300,305] #lean 360-64 (64 O) 360-31 (31 O) 
-lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
-lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
-clipped_subset=clipped[lat_inds,lon_inds]
-
-
-
-fig=plt.figure(figsize=(10,10))
-ax1=fig.add_subplot(projection=ccrs.PlateCarree(central_longitude=0))
-ax1.coastlines(color='0.3')
-
-clipped_subset.plot.contourf(ax=ax1,
-                   levels=np.arange(0, 100, 5),
-                   extend='neither',
-                   transform=ccrs.PlateCarree(),
-                   #cbar_kwargs={'label': variable_data_subset.units},
-                   #cmap=cmocean.cm.rain)
-                   )
-newconus.boundary.plot(ax=ax1,color='black',transform=ccrs.PlateCarree())
-
-ax1.set_xticklabels(np.arange(-60,-55)[::1])
-plt.xticks(np.arange(-60,-55)[::1])
-ax1.set_xlabel("Longitud")
-
-ax1.set_yticklabels(np.arange(-31,-26)[::1])
-plt.yticks(np.arange(-31,-26)[::1])
-ax1.set_ylabel("Latitud")
-
-
-plt.title("clipped pr invert=True")
-
 
 
 #%%
