@@ -879,6 +879,163 @@ for i in range(0,4):
 #%%
 
 """
+calculo la media mensual de una determinada variable en determinada region 
+grafico una serie temporal de todo el periodo, y por mes
+"""
+#defino funcion que calcula media mensual de una determinada variable en determinada region
+
+def media_espacial(data_list,indice_list,variable,lat_min,lat_max,lon_min,lon_max):
+    """
+    Calcula media mensual de una determinada variable en determinada region
+
+    Parameters
+    ----------
+    data_list : list
+        lista en cada elemento un netcdf de un determinado mes y anio, cargar la lista para modificar
+    indice_list: int
+        indice de elemento de la lista en el que busca los datos
+    variable : str
+        nombre variable
+    lat_min : float
+        latitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lat_max : float
+        latitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lon_min : float
+        longitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    lon_max : float
+        longitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+
+    Returns float
+    -------
+    media espacial de la variable seleccionada en la region seleccionada
+    """
+    import numpy as np
+    
+    data=data_list[indice_list]
+    variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+    
+    #selecciono region
+    lats=variable_data["lat"][:]
+    lons=variable_data["lon"][:]
+    lat_lims=[lat_min,lat_max]
+    lon_lims=[360+lon_min,360+lon_max] #lean 360-64 (64 O) 360-31 (31 O) 
+    lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+    lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+    variable_data_subset=variable_data[lat_inds,lon_inds]
+    
+    #calculo media espacial del subset de la variable data
+    media_espacial=np.nanmean(variable_data_subset.values,axis=(0,1))
+    return(media_espacial)
+
+#armo funcion que devuelve data frame donde primera columna sea la fecha y la segunda columna sea la media espacial
+def media_espacial_df(data_list,variable,lat_min,lat_max,lon_min,lon_max):
+    media_espacial_df=pd.DataFrame(columns=["fecha","Media_espacial_"+variable])
+    for i in range(0,len(data_list)):
+        #extraigo mes
+        mes=str(data_list[i]["time"].values[0])[5:7]
+        #extraigo anio
+        anio=str(data_list[i]["time"].values[0])[0:4]
+        #¢alculo media
+        media_espacial_i=media_espacial(data_list,i,variable,lat_min,lat_max,lon_min,lon_max)
+        media_espacial_df=media_espacial_df.append({"fecha": mes+"-"+anio, "Media_espacial_"+variable: media_espacial_i},ignore_index=True)
+    media_espacial_df["fecha"]=pd.to_datetime(media_espacial_df["fecha"])
+    return(media_espacial_df)
+
+cldamt_media_espacial_df_sudamerica=media_espacial_df(data_list,"cldamt",-60,15,-90,-30)
+cldamt_media_espacial_df_region1=media_espacial_df(data_list,"cldamt",-39,-16,-64,-31)
+cldamt_media_espacial_df_region2=media_espacial_df(data_list,"cldamt",-32,-22,-64,-53)
+
+#separo por mes
+def media_espacial_mes(media_espacial_df,numero_mes):
+        media_espacial_df_mes=media_espacial_df[(pd.DatetimeIndex(media_espacial_df["fecha"]).month)==numero_mes]
+        return(media_espacial_df_mes)
+
+#armo una lista con los df de media espacial mensual dde cldamt para cada region donde cada elemento tenga la serie de cada mes
+
+#sudamerica
+data_list_cldamt_media_espacial_mensuales_sudamerica=[None]*12
+for i in range(0,12):
+    data_list_cldamt_media_espacial_mensuales_sudamerica[i]=media_espacial_mes(cldamt_media_espacial_df_sudamerica,i+1)
+
+#region1
+data_list_cldamt_media_espacial_mensuales_region1=[None]*12
+for i in range(0,12):
+    data_list_cldamt_media_espacial_mensuales_region1[i]=media_espacial_mes(cldamt_media_espacial_df_region1,i+1)
+
+#region2
+data_list_cldamt_media_espacial_mensuales_region2=[None]*12
+for i in range(0,12):
+    data_list_cldamt_media_espacial_mensuales_region2[i]=media_espacial_mes(cldamt_media_espacial_df_region2,i+1)
+
+#separo por estacion
+def media_espacial_estacion(media_espacial_df,numero_mes1,numero_mes2,numero_mes3):
+        media_espacial_df_meses_estacion=media_espacial_df[(((pd.DatetimeIndex(media_espacial_df["fecha"]).month)==numero_mes1) | ((pd.DatetimeIndex(media_espacial_df["fecha"]).month)==numero_mes2) | ((pd.DatetimeIndex(media_espacial_df["fecha"]).month)==numero_mes3))]
+        media_espacial_df_meses_estacion.index=range(0,len(media_espacial_df_meses_estacion))
+        media_espacial_df_media_estacion=pd.DataFrame(columns=["fecha","Media_espacial_media_estacion"])
+        for i in range(0,len(media_espacial_df_meses_estacion),3):
+            media_espacial_df_media_estacion=media_espacial_df_media_estacion.append({"fecha": pd.DatetimeIndex(media_espacial_df_meses_estacion["fecha"]).year[i],"Media_espacial_media_estacion": ((media_espacial_df_meses_estacion["Media_espacial_cldamt"][i]+media_espacial_df_meses_estacion["Media_espacial_cldamt"][i+1]+media_espacial_df_meses_estacion["Media_espacial_cldamt"][i+2])/3)}, ignore_index=True)
+        return(media_espacial_df_media_estacion)
+
+veo=media_espacial_estacion(cldamt_media_espacial_df_sudamerica,12,1,2)
+pd.to_datetime(veo["fecha"],format=yyyy)
+
+#armo una lista con los df de media espacial promedio estacional para cada anio dde cldamt para cada region donde cada elemento tenga la serie de cada estacion
+
+#sudamerica
+data_list_cldamt_media_espacial_estacional_sudamerica=[None]*4
+data_list_cldamt_media_espacial_estacional_sudamerica[0]=media_espacial_estacion(cldamt_media_espacial_df_sudamerica,12,1,2)
+data_list_cldamt_media_espacial_estacional_sudamerica[1]=media_espacial_estacion(cldamt_media_espacial_df_sudamerica,3,4,5)
+data_list_cldamt_media_espacial_estacional_sudamerica[2]=media_espacial_estacion(cldamt_media_espacial_df_sudamerica,6,7,8)
+data_list_cldamt_media_espacial_estacional_sudamerica[3]=media_espacial_estacion(cldamt_media_espacial_df_sudamerica,9,10,11)
+
+#region1
+data_list_cldamt_media_espacial_estacional_region1=[None]*4
+data_list_cldamt_media_espacial_estacional_region1[0]=media_espacial_estacion(cldamt_media_espacial_df_region1,12,1,2)
+data_list_cldamt_media_espacial_estacional_region1[1]=media_espacial_estacion(cldamt_media_espacial_df_region1,3,4,5)
+data_list_cldamt_media_espacial_estacional_region1[2]=media_espacial_estacion(cldamt_media_espacial_df_region1,6,7,8)
+data_list_cldamt_media_espacial_estacional_region1[3]=media_espacial_estacion(cldamt_media_espacial_df_region1,9,10,11)
+
+#region2
+data_list_cldamt_media_espacial_estacional_region2=[None]*4
+data_list_cldamt_media_espacial_estacional_region2[0]=media_espacial_estacion(cldamt_media_espacial_df_region2,12,1,2)
+data_list_cldamt_media_espacial_estacional_region2[1]=media_espacial_estacion(cldamt_media_espacial_df_region2,3,4,5)
+data_list_cldamt_media_espacial_estacional_region2[2]=media_espacial_estacion(cldamt_media_espacial_df_region2,6,7,8)
+data_list_cldamt_media_espacial_estacional_region2[3]=media_espacial_estacion(cldamt_media_espacial_df_region2,9,10,11)
+
+
+#%%
+#TENGO QUE HACER ESTO MISMO PARA CORRIENTES Y GRAFICAR LA SERIE TEMPORAL
+
+#%%
+
+cldamt_media_espacial_df_sudamerica.groupby(cldamt_media_espacial_df_sudamerica["fecha"].dt.strftime('%B'))
+df['Month'] = pd.DatetimeIndex(df['date']).month_name()
+
+pd.DatetimeIndex(cldamt_media_espacial_df_sudamerica["fecha"]).month
+(pd.DatetimeIndex(cldamt_media_espacial_df_sudamerica["fecha"]).month)==7
+media_espacial_df[media_espacial_df["fecha"][7:8]=="07"]
+
+
+veo=cldamt_media_espacial_df_sudamerica[(pd.DatetimeIndex(cldamt_media_espacial_df_sudamerica["fecha"]).month)==7]
+
+import matplotlib.pyplot as plt
+
+
+fig1, ax = plt.subplots(figsize=[12,6],dpi=200)
+plt.plot(cldamt_media_espacial_df_region2["fecha"],cldamt_media_espacial_df_region2["Media_espacial_cldamt"])
+major_ticksx=np.arange(6,len(cldamt_media_espacial_df_region2["fecha"]),len(cldamt_media_espacial_df_region2["fecha"])/34)
+ax.set_xticks(major_ticksx)
+ax.grid(alpha=0.3)
+ax.tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
+ax.set_xlabel("Fecha", size=10)
+ax.set_ylabel("cldamt media %", size=10)
+plt.title("Media espacial mensual cldmt region2")
+plt.savefig("/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_campos/serie", dpi=140)
+
+
+#%%
+
+"""
 defino funcion que grafica los campos de una determinada variable en una determinada region
 """
 
