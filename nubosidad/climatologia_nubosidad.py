@@ -72,6 +72,7 @@ dset["n_orig"] #Mean hourly frequency of occurance of mean cloud amount
 """
 Abro los datos y los acomodo en una lista. Cada lista se corresponde al dset de cada NetCDF (uno por cada mes por cada anio)
 """
+
 import xarray as xr
 import pandas as pd
 
@@ -1105,7 +1106,7 @@ def serie_periodo_completo(data_frame_entrada,variable,region):
     ax.set_xlabel("Fecha", size=10)
     ax.set_ylabel("cldamt %", size=10)
     ax.grid()
-    plt.title(variable+" Media espacial mensual "+region+ " (serie completa)")
+    plt.title(variable+" Media mensual media "+region+ " (serie completa)")
     nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(serie completa)"
     plt.savefig("/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_series/"+nombre, dpi=140)
     plt.show
@@ -1118,20 +1119,19 @@ serie_periodo_completo(cldamt_media_espacial_df_corrientes,"cldamt","Corrientes"
 
 
 #mensual
-lista=data_list_cldamt_media_espacial_mensuales_corrientes
 import matplotlib.pyplot as plt
 
-def serie_mensual(lista,variable,region):
+def serie_mensual(lista,variable,region,ymin,ymax):
 
     fig1, ax = plt.subplots(4,3,figsize=[12,10],dpi=200) #https://matplotlib.org/devdocs/gallery/subplots_axes_and_figures/subplots_demo.html
-    fig1.suptitle(variable+" Media espacial mensual "+region+ " (meses)")
+    fig1.suptitle(variable+" Media mensual media "+region+ " (meses)",size=18)
     
     meses=[["Enero","Febrero","Marzo"],["Abril","Mayo","Junio"],["Julio","Agosto","Septiembre"],["Octubre","Noviembre","Diciembre"]]
     for j in range(0,4):
         for i in range(0,3):
             ax[j,i].plot(lista[i+3*j]["fecha"],lista[i+3*j]["Media_espacial_cldamt"],color="indigo")
             ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
-            ax[j,i].set_ylim(20,80)
+            ax[j,i].set_ylim(ymin,ymax)
             ax[j,i].set_xlabel("Fecha", size=10)
             ax[j,i].set_ylabel("cldamt %", size=10)
             ax[j,i].grid()
@@ -1142,8 +1142,45 @@ def serie_mensual(lista,variable,region):
     plt.savefig("/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_series/"+nombre, dpi=140)
     plt.show
 
-serie_mensual(lista,"cldamt","corrientes")
+serie_mensual(data_list_cldamt_media_espacial_mensuales_sudamerica,"cldamt","Sudamérica",60,80)
+serie_mensual(data_list_cldamt_media_espacial_mensuales_region1,"cldamt","Región 1",50,80)
+serie_mensual(data_list_cldamt_media_espacial_mensuales_region2,"cldamt","Región 2",30,80)
+serie_mensual(data_list_cldamt_media_espacial_mensuales_corrientes,"cldamt","Corrientes",20,80)
 
+#trimestral
+
+import matplotlib.pyplot as plt
+
+def serie_trimestral(lista,variable,region,ymin,ymax):
+
+    fig1, ax = plt.subplots(2,2,figsize=[12,10],dpi=200) #https://matplotlib.org/devdocs/gallery/subplots_axes_and_figures/subplots_demo.html
+    fig1.suptitle(variable+" Media trimestral media "+region+ " (meses)",size=18)
+    
+    estacion=[["DEF","MAM"],["JJA","SON"]]
+    for j in range(0,2):
+        for i in range(0,2):
+            ax[j,i].plot(lista[i+2*j]["fecha"],lista[i+2*j]["Media_espacial_media_estacion"],color="indigo")
+            ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
+            ax[j,i].set_ylim(ymin,ymax)
+            ax[j,i].set_xlabel("Fecha", size=10)
+            ax[j,i].set_ylabel("cldamt %", size=10)
+            ax[j,i].grid()
+            ax[j,i].set_title(estacion[j][i])
+
+    fig1.tight_layout()
+    nombre=variable+"_"+"media_espacial_trimestral_"+region+"_"+"(estaciones)"
+    plt.savefig("/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_series/"+nombre, dpi=140)
+    plt.show
+
+serie_trimestral(data_list_cldamt_media_espacial_estacional_sudamerica,"cldamt","Sudamérica",60,80)
+serie_trimestral(data_list_cldamt_media_espacial_estacional_region1,"cldamt","Región 1",50,80)
+serie_trimestral(data_list_cldamt_media_espacial_estacional_region2,"cldamt","Región 2",40,80)
+serie_trimestral(data_list_cldamt_media_espacial_estacional_corrientes,"cldamt","Corrientes",40,80)
+
+#%%
+"""
+LISTO CON LAS SERIES, extender a tipos de nube todo el analisis. 
+"""
 #%%
 
 """
