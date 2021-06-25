@@ -95,6 +95,38 @@ for i in range(0,cantidad_de_datos):
 
 #%%
 """
+Antes de hacer nada, lo primero que hago es generar en cada archivo xarray tres nuevas variables que van a representar el porcentaje de cldamt de nubes bajas medias y altas, siendo estos las sumas de
+cldamt_types : BAJAS:[0:6] MEDIAS:[6:12] ALTAS:[12:19]
+"""
+import numpy as np
+
+for i in range(0,len(data_list)):
+    bajas=data_list[i]["cldamt_types"].values[0][0]+data_list[i]["cldamt_types"].values[0][1]+data_list[i]["cldamt_types"].values[0][2]+data_list[i]["cldamt_types"].values[0][3]+data_list[i]["cldamt_types"].values[0][4]+data_list[i]["cldamt_types"].values[0][5]
+    bajas_3D=np.reshape(bajas,(1,180,360))
+    bajas_array=xr.DataArray(data=bajas_3D,dims=["time","lat","lon"])
+    bajas_array=bajas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
+    bajas_array.attrs["units"]= "percent"
+    
+    medias=data_list[i]["cldamt_types"].values[0][6]+data_list[i]["cldamt_types"].values[0][7]+data_list[i]["cldamt_types"].values[0][8]+data_list[i]["cldamt_types"].values[0][9]+data_list[i]["cldamt_types"].values[0][10]+data_list[i]["cldamt_types"].values[0][11]
+    medias_3D=np.reshape(medias,(1,180,360))
+    medias_array=xr.DataArray(data=medias_3D,dims=["time","lat","lon"])
+    medias_array=medias_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
+    medias_array.attrs["units"]= "percent"
+    
+    altas=data_list[i]["cldamt_types"].values[0][12]+data_list[i]["cldamt_types"].values[0][13]+data_list[i]["cldamt_types"].values[0][14]+data_list[i]["cldamt_types"].values[0][15]+data_list[i]["cldamt_types"].values[0][16]+data_list[i]["cldamt_types"].values[0][17]
+    altas_3D=np.reshape(altas,(1,180,360))
+    altas_array=xr.DataArray(data=altas_3D,dims=["time","lat","lon"])
+    altas_array=altas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
+    altas_array.attrs["units"]= "percent"
+    
+    data_list[i]=data_list[i].assign(cldamt_bajas=bajas_array)
+    data_list[i]=data_list[i].assign(cldamt_medias=medias_array)
+    data_list[i]=data_list[i].assign(cldamt_altas=altas_array)
+
+
+
+#%%
+"""
 Calculos estadisticos básicos
 """
 #%%
@@ -171,6 +203,45 @@ meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
 desvio_mensual_cldamt_list=[None]*12
 for i in range(0,12):
     desvio_mensual_cldamt_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt",meses[i],"%")[1]
+
+#extiendo a cldamt_bajas, cldamt_medias, cldamt_altas
+
+#armo lista con medias mensuales de cldamt_bajas
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+media_mensual_cldamt_bajas_list=[None]*12
+for i in range(0,12):
+    media_mensual_cldamt_bajas_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_bajas",meses[i],"%")[0]
+
+#armo lista con desvios mensuales de cldamt_bajas
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+desvio_mensual_cldamt_bajas_list=[None]*12
+for i in range(0,12):
+    desvio_mensual_cldamt_bajas_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_bajas",meses[i],"%")[1]
+
+#armo lista con medias mensuales de cldamt_medias
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+media_mensual_cldamt_medias_list=[None]*12
+for i in range(0,12):
+    media_mensual_cldamt_medias_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_medias",meses[i],"%")[0]
+
+#armo lista con desvios mensuales de cldamt_medias
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+desvio_mensual_cldamt_medias_list=[None]*12
+for i in range(0,12):
+    desvio_mensual_cldamt_medias_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_medias",meses[i],"%")[1]
+
+#armo lista con medias mensuales de cldamt_altas
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+media_mensual_cldamt_altas_list=[None]*12
+for i in range(0,12):
+    media_mensual_cldamt_altas_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_altas",meses[i],"%")[0]
+
+#armo lista con desvios mensuales de cldamt_altas
+meses=["01","02","03","04","05","06","07","08","09","10","11","12"]
+desvio_mensual_cldamt_altas_list=[None]*12
+for i in range(0,12):
+    desvio_mensual_cldamt_altas_list[i]=media_desvio_mensual(data_list_1984_2016,"cldamt_altas",meses[i],"%")[1]
+
 
 #%%
 """
@@ -271,6 +342,52 @@ desvio_trimestral_cldamt_list[1]=media_desvio_trimestral(data_list_12_1983_11_20
 desvio_trimestral_cldamt_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt","09","10","11","%")[1]
 desvio_trimestral_cldamt_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt","12","01","02","%")[1]
 
+#extiendo a cldamt bajas medias y altas
+
+#armo lista con medias trimestrales cldamt_bajas
+media_trimestral_cldamt_bajas_list=[None]*4
+media_trimestral_cldamt_bajas_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","03","04","05","%")[0]
+media_trimestral_cldamt_bajas_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","06","07","08","%")[0]
+media_trimestral_cldamt_bajas_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","09","10","11","%")[0]
+media_trimestral_cldamt_bajas_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","12","01","02","%")[0]
+
+#armo lista con desvios trimestrales cldamt_bajas
+desvio_trimestral_cldamt_bajas_list=[None]*4
+desvio_trimestral_cldamt_bajas_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","03","04","05","%")[1]
+desvio_trimestral_cldamt_bajas_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","06","07","08","%")[1]
+desvio_trimestral_cldamt_bajas_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","09","10","11","%")[1]
+desvio_trimestral_cldamt_bajas_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_bajas","12","01","02","%")[1]
+
+#armo lista con medias trimestrales cldamt_medias
+media_trimestral_cldamt_medias_list=[None]*4
+media_trimestral_cldamt_medias_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","03","04","05","%")[0]
+media_trimestral_cldamt_medias_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","06","07","08","%")[0]
+media_trimestral_cldamt_medias_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","09","10","11","%")[0]
+media_trimestral_cldamt_medias_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","12","01","02","%")[0]
+
+#armo lista con desvios trimestrales cldamt_medias
+desvio_trimestral_cldamt_medias_list=[None]*4
+desvio_trimestral_cldamt_medias_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","03","04","05","%")[1]
+desvio_trimestral_cldamt_medias_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","06","07","08","%")[1]
+desvio_trimestral_cldamt_medias_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","09","10","11","%")[1]
+desvio_trimestral_cldamt_medias_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_medias","12","01","02","%")[1]
+
+#armo lista con medias trimestrales cldamt_altas
+media_trimestral_cldamt_altas_list=[None]*4
+media_trimestral_cldamt_altas_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","03","04","05","%")[0]
+media_trimestral_cldamt_altas_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","06","07","08","%")[0]
+media_trimestral_cldamt_altas_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","09","10","11","%")[0]
+media_trimestral_cldamt_altas_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","12","01","02","%")[0]
+
+#armo lista con desvios trimestrales cldamt_altas
+desvio_trimestral_cldamt_altas_list=[None]*4
+desvio_trimestral_cldamt_altas_list[0]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","03","04","05","%")[1]
+desvio_trimestral_cldamt_altas_list[1]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","06","07","08","%")[1]
+desvio_trimestral_cldamt_altas_list[2]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","09","10","11","%")[1]
+desvio_trimestral_cldamt_altas_list[3]=media_desvio_trimestral(data_list_12_1983_11_2016,"cldamt_altas","12","01","02","%")[1]
+
+
+
 #%%
 """
 Recorto los xarrays de la climatologia para el shape de Corrientes
@@ -356,7 +473,7 @@ Corro esta funcion y armo lista con los estadisticos (media y desvio) recortados
 
 IGN=gpd.read_file("/home/nadia/Documentos/Doctorado/datos/mapas/provincia/provincia.shp")
 
-#armo lista con medias y desvios mensuales de cldamt
+#armo lista con variable original, medias y desvios mensuales de cldamt
 
 cldamt_list_clipped=[None]*len(data_list)
 for i in range(0,len(data_list)):
@@ -385,6 +502,98 @@ desvio_trimestral_cldamt_list_clipped=[None]*4
 for i in range(0,4):
     coords=np.array(IGN.geometry[19][0].exterior.coords)
     desvio_trimestral_cldamt_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_list, i,"climatologia","cldamt")[0]
+
+
+#extiendo a cldamt_bajas, cldamt_medias, cldamt_altas
+
+###########bajas
+cldamt_bajas_list_clipped=[None]*len(data_list)
+for i in range(0,len(data_list)):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    cldamt_bajas_list_clipped[i]=clip_xarray_con_shape(coords, data_list, i,"original","cldamt_bajas")[0]
+
+
+media_mensual_cldamt_bajas_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_mensual_cldamt_bajas_list_clipped[i]=clip_xarray_con_shape(coords, media_mensual_cldamt_bajas_list, i,"climatologia","cldamt_bajas")[0]
+
+desvio_mensual_cldamt_bajas_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_mensual_cldamt_bajas_list_clipped[i]=clip_xarray_con_shape(coords, desvio_mensual_cldamt_bajas_list, i,"climatologia","cldamt_bajas")[0]
+
+#armo lista con medias y desvios trimestrales de cldamt_bajas
+
+media_trimestral_cldamt_bajas_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_trimestral_cldamt_bajas_list_clipped[i]=clip_xarray_con_shape(coords, media_trimestral_cldamt_bajas_list, i,"climatologia","cldamt_bajas")[0]
+
+desvio_trimestral_cldamt_bajas_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_trimestral_cldamt_bajas_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_bajas_list, i,"climatologia","cldamt_bajas")[0]
+
+###########medias
+cldamt_medias_list_clipped=[None]*len(data_list)
+for i in range(0,len(data_list)):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    cldamt_medias_list_clipped[i]=clip_xarray_con_shape(coords, data_list, i,"original","cldamt_medias")[0]
+
+
+media_mensual_cldamt_medias_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_mensual_cldamt_medias_list_clipped[i]=clip_xarray_con_shape(coords, media_mensual_cldamt_medias_list, i,"climatologia","cldamt_medias")[0]
+
+desvio_mensual_cldamt_medias_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_mensual_cldamt_medias_list_clipped[i]=clip_xarray_con_shape(coords, desvio_mensual_cldamt_medias_list, i,"climatologia","cldamt_medias")[0]
+
+#armo lista con medias y desvios trimestrales de cldamt_medias
+
+media_trimestral_cldamt_medias_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_trimestral_cldamt_medias_list_clipped[i]=clip_xarray_con_shape(coords, media_trimestral_cldamt_medias_list, i,"climatologia","cldamt_medias")[0]
+
+desvio_trimestral_cldamt_medias_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_trimestral_cldamt_medias_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_medias_list, i,"climatologia","cldamt_medias")[0]
+
+###########altas
+cldamt_altas_list_clipped=[None]*len(data_list)
+for i in range(0,len(data_list)):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, data_list, i,"original","cldamt_altas")[0]
+
+
+media_mensual_cldamt_altas_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_mensual_cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, media_mensual_cldamt_altas_list, i,"climatologia","cldamt_altas")[0]
+
+desvio_mensual_cldamt_altas_list_clipped=[None]*12
+for i in range(0,12):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_mensual_cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, desvio_mensual_cldamt_altas_list, i,"climatologia","cldamt_altas")[0]
+
+#armo lista con medias y desvios trimestrales de cldamt_altas
+
+media_trimestral_cldamt_altas_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    media_trimestral_cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, media_trimestral_cldamt_altas_list, i,"climatologia","cldamt_altas")[0]
+
+desvio_trimestral_cldamt_altas_list_clipped=[None]*4
+for i in range(0,4):
+    coords=np.array(IGN.geometry[19][0].exterior.coords)
+    desvio_trimestral_cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_altas_list, i,"climatologia","cldamt_altas")[0]
+
+
 
 #%%
 """
@@ -538,7 +747,10 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
                    transform=ccrs.PlateCarree(),
                    cbar_kwargs={'label': variable_data_subset.units},
                    cmap=cmocean.cm.matter)
-        
+        #######ver estas lineas###############
+    facecolors = np.ma.array(variable_data_subset, mask=np.isnan(variable_data_subset))
+    ax.set_array(facecolors)
+        #######ver estas lineas###############
     ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
                   edgecolor='0.5',linewidth=0.7,alpha=0.8)
 
@@ -763,19 +975,19 @@ shpfilename = shapereader.natural_earth(resolution, category, name) #cargo paise
 # cargo el shapefile usando geopandas
 df = geopandas.read_file(shpfilename)
 # leo los paises que voy a necesitar
-paises=MultiPolygon([df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0],
-                     df.loc[df['ADMIN'] == 'Brazil']['geometry'].values[0],
+paises=MultiPolygon([df.loc[df['ADMIN'] == 'Argentina']['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == 'Brazil']['geometry'].values[0][0],
                      df.loc[df['ADMIN'] == 'Paraguay']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Uruguay']['geometry'].values[0],
                      df.loc[df['ADMIN'] == 'Bolivia']['geometry'].values[0],
-                     df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Colombia"]['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Ecuador"]['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Venezuela"]['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Guyana"]['geometry'].values[0],
+                     df.loc[df['ADMIN'] == 'Chile']['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == "Colombia"]['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == "Ecuador"]['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == "Venezuela"]['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == "Guyana"]['geometry'].values[0][0],
                      df.loc[df['ADMIN'] == "Suriname"]['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Panama"]['geometry'].values[0],
-                     df.loc[df['ADMIN'] == "Costa Rica"]['geometry'].values[0]]) #los paso a multipolygon para poder graficarlos
+                     df.loc[df['ADMIN'] == "Panama"]['geometry'].values[0][0],
+                     df.loc[df['ADMIN'] == "Costa Rica"]['geometry'].values[0][0]]) #los paso a multipolygon para poder graficarlos
 
 #cargo shape con provincias de argentina con datos del IGN 
 #descargo los datos de aca: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG "Provincia"
@@ -895,7 +1107,80 @@ for i in range(0,4):
     grafico_campos_climatologia_nubosidad_clip(paises,provincias,desvio_trimestral_cldamt_list_clipped,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-31,-26,-60,-55,"%",0,14,1,-59,-55,-30,-27,True,"Corrientes","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",1,"H")
 
 
-#%%
+#%% 
+#extiendo a cldamt bajas medias y altas
+#ploteo para sudamerica 
+#bajas
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_bajas_list,i,"cldamt nubes bajas media mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","rain",8,"V")
+#ver que quedan espacios en blanco. 
+
+import matplotlib.pyplot as plt
+plt.close(fig="all")
+    
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_bajas_list,i,"cldamt nubes bajas media trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","rain",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+###############################################################################################################################
+#medias
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_medias_list,i,"cldamt nubes medias media mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_medias_climatologia","rain",8,"V")
+#ver que quedan espacios en blanco. 
+
+import matplotlib.pyplot as plt
+plt.close(fig="all")
+    
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_medias_list,i,"cldamt nubes medias desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_medias_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_medias_list,i,"cldamt nubes medias media trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_medias_climatologia","rain",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_medias_list,i,"cldamt nubes medias desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_medias_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+###############################################################################################################################
+#altas
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_mensual_cldamt_altas_list,i,"cldamt nubes altas media mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_altas_climatologia","rain",8,"V")
+#ver que quedan espacios en blanco. 
+
+import matplotlib.pyplot as plt
+plt.close(fig="all")
+    
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_altas_list,i,"cldamt nubes altas desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_altas_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,media_trimestral_cldamt_altas_list,i,"cldamt nubes altas media trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,101,5,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_altas_climatologia","rain",8,"V")
+
+plt.close(fig="all")
+
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_altas_list,i,"cldamt nubes altas desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_altas_climatologia","matter",8,"V")
+
+plt.close(fig="all")
+
 
 
 #%%
