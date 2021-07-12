@@ -1567,10 +1567,16 @@ def media_espacial_df(data_list,variable,lat_min,lat_max,lon_min,lon_max,clipped
 
 
 #%% corro para cldamt
+
 cldamt_media_espacial_df_sudamerica=media_espacial_df(data_list,"cldamt",-60,15,-90,-30,False)
 cldamt_media_espacial_df_region1=media_espacial_df(data_list,"cldamt",-39,-16,-64,-31,False)
 cldamt_media_espacial_df_region2=media_espacial_df(data_list,"cldamt",-32,-22,-64,-53,False)
 cldamt_media_espacial_df_corrientes=media_espacial_df(cldamt_list_clipped,"cldamt",-32,-22,-64,-53,True)
+
+cldamt_media_espacial_df_sudamerica.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_sudamerica.csv")
+cldamt_media_espacial_df_region1.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_region1.csv")
+cldamt_media_espacial_df_region2.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_region2.csv")
+cldamt_media_espacial_df_corrientes.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_corrientes.csv")
 
 #%% corro para cldamt bajas
 cldamt_bajas_media_espacial_df_sudamerica=media_espacial_df(data_list,"cldamt_bajas",-60,15,-90,-30,False)
@@ -1578,17 +1584,59 @@ cldamt_bajas_media_espacial_df_region1=media_espacial_df(data_list,"cldamt_bajas
 cldamt_bajas_media_espacial_df_region2=media_espacial_df(data_list,"cldamt_bajas",-32,-22,-64,-53,False)
 cldamt_bajas_media_espacial_df_corrientes=media_espacial_df(cldamt_bajas_list_clipped,"cldamt_bajas",-32,-22,-64,-53,True)
 
+cldamt_bajas_media_espacial_df_sudamerica.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_sudamerica.csv")
+cldamt_bajas_media_espacial_df_region1.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_region1.csv")
+cldamt_bajas_media_espacial_df_region2.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_region2.csv")
+cldamt_bajas_media_espacial_df_corrientes.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_corrientes.csv")
+
 #%% corro para cldamt medias
 cldamt_medias_media_espacial_df_sudamerica=media_espacial_df(data_list,"cldamt_medias",-60,15,-90,-30,False)
 cldamt_medias_media_espacial_df_region1=media_espacial_df(data_list,"cldamt_medias",-39,-16,-64,-31,False)
 cldamt_medias_media_espacial_df_region2=media_espacial_df(data_list,"cldamt_medias",-32,-22,-64,-53,False)
 cldamt_medias_media_espacial_df_corrientes=media_espacial_df(cldamt_medias_list_clipped,"cldamt_medias",-32,-22,-64,-53,True)
 
+cldamt_medias_media_espacial_df_sudamerica.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_sudamerica.csv")
+cldamt_medias_media_espacial_df_region1.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_region1.csv")
+cldamt_medias_media_espacial_df_region2.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_region2.csv")
+cldamt_medias_media_espacial_df_corrientes.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_corrientes.csv")
+
 #%% corro para cldamt altas
 cldamt_altas_media_espacial_df_sudamerica=media_espacial_df(data_list,"cldamt_altas",-60,15,-90,-30,False)
 cldamt_altas_media_espacial_df_region1=media_espacial_df(data_list,"cldamt_altas",-39,-16,-64,-31,False)
 cldamt_altas_media_espacial_df_region2=media_espacial_df(data_list,"cldamt_altas",-32,-22,-64,-53,False)
 cldamt_altas_media_espacial_df_corrientes=media_espacial_df(cldamt_altas_list_clipped,"cldamt_altas",-32,-22,-64,-53,True)
+
+cldamt_altas_media_espacial_df_sudamerica.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_sudamerica.csv")
+cldamt_altas_media_espacial_df_region1.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_region1.csv")
+cldamt_altas_media_espacial_df_region2.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_region2.csv")
+cldamt_altas_media_espacial_df_corrientes.to_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_corrientes.csv")
+
+#%% ahora que estan guardados los df, los cargo directamente.
+import pandas as pd
+
+#cldamt
+cldamt_media_espacial_df_sudamerica=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_sudamerica.csv", index_col=0)
+cldamt_media_espacial_df_region1=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_region1.csv", index_col=0)
+cldamt_media_espacial_df_region2=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_region2.csv", index_col=0)
+cldamt_media_espacial_df_corrientes=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_corrientes.csv", index_col=0)
+
+#cldamt_bajas
+cldamt_bajas_media_espacial_df_sudamerica=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_sudamerica.csv", index_col=0)
+cldamt_bajas_media_espacial_df_region1=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_region1.csv", index_col=0)
+cldamt_bajas_media_espacial_df_region2=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_region2.csv", index_col=0)
+cldamt_bajas_media_espacial_df_corrientes=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_bajas_media_espacial_df_corrientes.csv", index_col=0)
+
+#cldamt_medias
+cldamt_medias_media_espacial_df_sudamerica=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_sudamerica.csv", index_col=0)
+cldamt_medias_media_espacial_df_region1=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_region1.csv", index_col=0)
+cldamt_medias_media_espacial_df_region2=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_region2.csv", index_col=0)
+cldamt_medias_media_espacial_df_corrientes=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_medias_media_espacial_df_corrientes.csv", index_col=0)
+
+#cldamt_altas
+cldamt_altas_media_espacial_df_sudamerica=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_sudamerica.csv", index_col=0)
+cldamt_altas_media_espacial_df_region1=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_region1.csv", index_col=0)
+cldamt_altas_media_espacial_df_region2=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_region2.csv", index_col=0)
+cldamt_altas_media_espacial_df_corrientes=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_altas_media_espacial_df_corrientes.csv", index_col=0)
 
 #%%
 
@@ -1846,6 +1894,7 @@ def serie_periodo_completo(data_frame_entrada,variable,region,ruta_salida):
     plt.savefig(ruta_salida+nombre, dpi=140)
     plt.show
 
+
 #%%corro para cldamt
 #corro la funcion para graficar la serie de cada region
 ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_series/"
@@ -1877,6 +1926,38 @@ serie_periodo_completo(cldamt_altas_media_espacial_df_sudamerica,"cldamt_altas",
 serie_periodo_completo(cldamt_altas_media_espacial_df_region1,"cldamt_altas","Región 1",ruta_salida)
 serie_periodo_completo(cldamt_altas_media_espacial_df_region2,"cldamt_altas","Región 2",ruta_salida)
 serie_periodo_completo(cldamt_altas_media_espacial_df_corrientes,"cldamt_altas","Corrientes",ruta_salida)
+
+#%%
+"""
+grafico las series temporales completas para todos los tipos de nube juntos 
+"""
+#anual
+import matplotlib.pyplot as plt
+def serie_periodo_completo(data_frame_entrada_cldamt,data_frame_entrada_bajas,data_frame_entrada_medias,data_frame_entrada_altas,variable,region,ruta_salida):
+    fig1, ax = plt.subplots(figsize=[10,6],dpi=200)
+    plt.plot(data_frame_entrada_cldamt["fecha"],data_frame_entrada_cldamt["Media_espacial_"+variable],color="k")
+    plt.plot(data_frame_entrada_bajas["fecha"],data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"],color="teal")
+    plt.plot(data_frame_entrada_medias["fecha"],data_frame_entrada_medias["Media_espacial_"+variable+"_medias"],color="purple")
+    plt.plot(data_frame_entrada_altas["fecha"],data_frame_entrada_altas["Media_espacial_"+variable+"_altas"],color="crimson")
+    ax.tick_params(axis='x',direction='out',bottom=True,labelrotation=25, labelsize=10,pad=1.5)
+    ax.set_ylim(0,100)
+    plt.xticks(data_frame_entrada_cldamt["fecha"][::24])
+    ax.set_xlabel("Fecha", size=10)
+    ax.set_ylabel(variable+" %", size=10)
+    ax.grid()
+    plt.title(variable+" Media mensual media "+region+ " (serie completa)")
+    plt.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"])
+    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(serie completa)"
+    plt.savefig(ruta_salida+nombre, dpi=140)
+    plt.show
+
+#%%
+#lo corro
+ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
+serie_periodo_completo(cldamt_media_espacial_df_sudamerica,cldamt_bajas_media_espacial_df_sudamerica,cldamt_medias_media_espacial_df_sudamerica,cldamt_altas_media_espacial_df_sudamerica,"cldamt","Sudamérica",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_region1,cldamt_bajas_media_espacial_df_region1,cldamt_medias_media_espacial_df_region1,cldamt_altas_media_espacial_df_region1,"cldamt","Región 1",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_region2,cldamt_bajas_media_espacial_df_region2,cldamt_medias_media_espacial_df_region2,cldamt_altas_media_espacial_df_region2,"cldamt","Región 2",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_corrientes,cldamt_bajas_media_espacial_df_corrientes,cldamt_medias_media_espacial_df_corrientes,cldamt_altas_media_espacial_df_corrientes,"cldamt","Corrientes",ruta_salida)
 
 #%%
 #mensual
@@ -1929,6 +2010,41 @@ serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_region1,"cldamt_al
 serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_region2,"cldamt_altas","Región 2",10,50,ruta_salida)
 serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_corrientes,"cldamt_altas","Corrientes",10,50,ruta_salida)
 
+#%%
+"""
+Lo hago para cldamt, bajas, medias y altas junto  VER DE PONER SOLO LOS NUMEROS DE LOS ANIOS EN LOS EJES 
+"""
+#mensual
+
+import matplotlib.pyplot as plt
+
+def serie_mensual(lista_cldamt,lista_bajas,lista_medias,lista_altas,variable,region,ymin,ymax,ruta_salida):
+
+    fig1, ax = plt.subplots(4,3,figsize=[12,10],dpi=200) #https://matplotlib.org/devdocs/gallery/subplots_axes_and_figures/subplots_demo.html
+    fig1.suptitle(variable+" Media mensual media "+region+ " (meses)",size=18)
+    
+    meses=[["Enero","Febrero","Marzo"],["Abril","Mayo","Junio"],["Julio","Agosto","Septiembre"],["Octubre","Noviembre","Diciembre"]]
+    for j in range(0,4):
+        for i in range(0,3):
+            ax[j,i].plot(lista_cldamt[i+3*j]["fecha"],lista_cldamt[i+3*j]["Media_espacial_"+variable],color="k")
+            ax[j,i].plot(lista_bajas[i+3*j]["fecha"],lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"],color="teal")
+            ax[j,i].plot(lista_medias[i+3*j]["fecha"],lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"],color="purple")
+            ax[j,i].plot(lista_altas[i+3*j]["fecha"],lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"],color="crimson")
+            ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
+            ax[j,i].set_ylim(ymin,ymax)
+            ax[j,i].set_xlabel("Fecha", size=10)
+            ax[j,i].set_ylabel(variable+" %", size=10)
+            ax[j,i].grid()
+            ax[j,i].set_title(meses[j][i])
+    plt.xticks(lista_cldamt[0]["fecha"][::1])
+
+    fig1.tight_layout()
+    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(meses)"
+    plt.savefig(ruta_salida+nombre, dpi=140)
+    plt.show
+
+ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
+serie_mensual(data_list_cldamt_media_espacial_mensuales_sudamerica,data_list_cldamt_bajas_media_espacial_mensuales_sudamerica,data_list_cldamt_medias_media_espacial_mensuales_sudamerica,data_list_cldamt_altas_media_espacial_mensuales_sudamerica,"cldamt","Sudamérica",0,100,ruta_salida) #60,80
 
 #%%
 #trimestral
