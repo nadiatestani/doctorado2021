@@ -101,10 +101,10 @@ for i in range(0,len(data_list)):
 
     cldamt_types=data_list[i]["cldamt_types"].values[0]
     
-    #bajas_3D=np.reshape(cldamt_types[0]+cldamt_types[1]+cldamt_types[2]+cldamt_types[3]+cldamt_types[4]+cldamt_types[5],(1,180,360))
-    #bajas_array=xr.DataArray(data=bajas_3D,dims=["time","lat","lon"])
-    #bajas_array=bajas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
-    #bajas_array.attrs["units"]= "percent"
+    bajas_3D=np.reshape(cldamt_types[0]+cldamt_types[1]+cldamt_types[2]+cldamt_types[3]+cldamt_types[4]+cldamt_types[5],(1,180,360))
+    bajas_array=xr.DataArray(data=bajas_3D,dims=["time","lat","lon"])
+    bajas_array=bajas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
+    bajas_array.attrs["units"]= "percent"
 
     
     #medias_3D=np.reshape(cldamt_types[6]+cldamt_types[7]+cldamt_types[8]+cldamt_types[9]+cldamt_types[10]+cldamt_types[11],(1,180,360))
@@ -112,13 +112,13 @@ for i in range(0,len(data_list)):
     #medias_array=medias_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
     #medias_array.attrs["units"]= "percent"
 
-    altas_3D=np.reshape(cldamt_types[12]+cldamt_types[13]+cldamt_types[14]+cldamt_types[15]+cldamt_types[16]+cldamt_types[17],(1,180,360))
-    altas_array=xr.DataArray(data=altas_3D,dims=["time","lat","lon"])
-    altas_array=altas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
-    altas_array.attrs["units"]= "percent"
+    #altas_3D=np.reshape(cldamt_types[12]+cldamt_types[13]+cldamt_types[14]+cldamt_types[15]+cldamt_types[16]+cldamt_types[17],(1,180,360))
+    #altas_array=xr.DataArray(data=altas_3D,dims=["time","lat","lon"])
+    #altas_array=altas_array.assign_coords({"lon":data_list[i].lon.values ,"lat":data_list[i].lat.values ,"time":data_list[i].time.values })
+    #altas_array.attrs["units"]= "percent"
     
     #data_list[i]=data_list[i].assign(cldamt_bajas=bajas_array, cldamt_medias=medias_array, cldamt_altas=altas_array)
-    data_list[i]=data_list[i].assign(cldamt_altas=altas_array)
+    data_list[i]=data_list[i].assign(cldamt_bajas=bajas_array)
 
 
 #%%
@@ -1011,6 +1011,11 @@ plt.close(fig="all")
 for i in range(0,12):
     grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
 
+#otra escala la misma que para cldamt medias y altas
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_list,i,"cldamt desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,40,2,-85,-30,-55,15,True,"Sudamérica ","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
+
+
 plt.close(fig="all")
 
 for i in range(0,4):
@@ -1019,7 +1024,7 @@ for i in range(0,4):
 plt.close(fig="all")
 
 for i in range(0,4):
-    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_list,i,"cldamt desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,40,2,-85,-30,-55,15,True,"Sudamérica ","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","matter",8,"V")
 
 plt.close(fig="all")
 
@@ -1124,6 +1129,11 @@ plt.close(fig="all")
 for i in range(0,12):
     grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
 
+#cambio escala
+for i in range(0,12):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_mensual_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar mensual (1984-2016)","mensual",-60,15,-90,-30,"%",0,40,2,-85,-30,-55,15,True,"Sudamérica ","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
+
+
 plt.close(fig="all")
 
 for i in range(0,4):
@@ -1133,6 +1143,10 @@ plt.close(fig="all")
 
 for i in range(0,4):
     grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,26,2,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
+
+#cambio escala
+for i in range(0,4):
+    grafico_campos_climatologia_nubosidad(paises,provincias,desvio_trimestral_cldamt_bajas_list,i,"cldamt nubes bajas desvío estándar trimestral (1984-2016)","trimestral",-60,15,-90,-30,"%",0,40,2,-85,-30,-55,15,True,"Sudamérica ","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_climatologia","matter",8,"V")
 
 plt.close(fig="all")
 
@@ -1944,37 +1958,6 @@ serie_periodo_completo(cldamt_altas_media_espacial_df_region1,"cldamt_altas","Re
 serie_periodo_completo(cldamt_altas_media_espacial_df_region2,"cldamt_altas","Región 2",ruta_salida)
 serie_periodo_completo(cldamt_altas_media_espacial_df_corrientes,"cldamt_altas","Corrientes",ruta_salida)
 
-#%%
-"""
-grafico las series temporales completas para todos los tipos de nube juntos 
-"""
-#anual
-import matplotlib.pyplot as plt
-def serie_periodo_completo(data_frame_entrada_cldamt,data_frame_entrada_bajas,data_frame_entrada_medias,data_frame_entrada_altas,variable,region,ruta_salida):
-    fig1, ax = plt.subplots(figsize=[10,6],dpi=200)
-    plt.plot(data_frame_entrada_cldamt["fecha"],data_frame_entrada_cldamt["Media_espacial_"+variable],color="k")
-    plt.plot(data_frame_entrada_bajas["fecha"],data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"],color="teal")
-    plt.plot(data_frame_entrada_medias["fecha"],data_frame_entrada_medias["Media_espacial_"+variable+"_medias"],color="purple")
-    plt.plot(data_frame_entrada_altas["fecha"],data_frame_entrada_altas["Media_espacial_"+variable+"_altas"],color="crimson")
-    ax.tick_params(axis='x',direction='out',bottom=True,labelrotation=25, labelsize=10,pad=1.5)
-    ax.set_ylim(0,100)
-    #plt.xticks(data_frame_entrada_cldamt["fecha"][::24])
-    ax.set_xlabel("Fecha", size=10)
-    ax.set_ylabel(variable+" %", size=10)
-    ax.grid()
-    plt.title(variable+" Media mensual media "+region+ " (serie completa)")
-    plt.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"])
-    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(serie completa)"
-    plt.savefig(ruta_salida+nombre, dpi=140)
-    plt.show
-
-#%%
-#lo corro
-ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
-serie_periodo_completo(cldamt_media_espacial_df_sudamerica,cldamt_bajas_media_espacial_df_sudamerica,cldamt_medias_media_espacial_df_sudamerica,cldamt_altas_media_espacial_df_sudamerica,"cldamt","Sudamérica",ruta_salida)
-serie_periodo_completo(cldamt_media_espacial_df_region1,cldamt_bajas_media_espacial_df_region1,cldamt_medias_media_espacial_df_region1,cldamt_altas_media_espacial_df_region1,"cldamt","Región 1",ruta_salida)
-serie_periodo_completo(cldamt_media_espacial_df_region2,cldamt_bajas_media_espacial_df_region2,cldamt_medias_media_espacial_df_region2,cldamt_altas_media_espacial_df_region2,"cldamt","Región 2",ruta_salida)
-serie_periodo_completo(cldamt_media_espacial_df_corrientes,cldamt_bajas_media_espacial_df_corrientes,cldamt_medias_media_espacial_df_corrientes,cldamt_altas_media_espacial_df_corrientes,"cldamt","Corrientes",ruta_salida)
 
 #%%
 #mensual
@@ -2026,56 +2009,6 @@ serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_sudamerica,"cldamt
 serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_region1,"cldamt_altas","Región 1",10,50,ruta_salida)
 serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_region2,"cldamt_altas","Región 2",10,50,ruta_salida)
 serie_mensual(data_list_cldamt_altas_media_espacial_mensuales_corrientes,"cldamt_altas","Corrientes",10,50,ruta_salida)
-
-#%%
-"""
-Lo hago para cldamt, bajas, medias y altas junto  VER DE PONER SOLO LOS NUMEROS DE LOS ANIOS EN LOS EJES 
-"""
-#mensual
-
-import matplotlib.pyplot as plt
-
-def serie_mensual(lista_cldamt,lista_bajas,lista_medias,lista_altas,variable,region,ymin,ymax,ruta_salida):
-
-    fig1, ax = plt.subplots(4,3,figsize=[12,10],dpi=200) #https://matplotlib.org/devdocs/gallery/subplots_axes_and_figures/subplots_demo.html
-    fig1.suptitle(variable+" Media mensual media "+region+ " (meses)",size=18)
-    
-    meses=[["Enero","Febrero","Marzo"],["Abril","Mayo","Junio"],["Julio","Agosto","Septiembre"],["Octubre","Noviembre","Diciembre"]]
-    for j in range(0,4):
-        for i in range(0,3):
-            ax[j,i].plot(lista_cldamt[i+3*j]["fecha"],lista_cldamt[i+3*j]["Media_espacial_"+variable],color="k")
-            ax[j,i].plot(lista_bajas[i+3*j]["fecha"],lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"],color="teal")
-            ax[j,i].plot(lista_medias[i+3*j]["fecha"],lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"],color="purple")
-            ax[j,i].plot(lista_altas[i+3*j]["fecha"],lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"],color="crimson")
-            ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
-            ax[j,i].set_ylim(ymin,ymax)
-            ax[j,i].set_xlabel("Fecha", size=10)
-            ax[j,i].set_ylabel(variable+" %", size=10)
-            ax[j,i].grid()
-            ax[j,i].set_title(meses[j][i])
-    #plt.xticks(lista_cldamt[0]["fecha"][::1])
-    fig1.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"], loc='lower left',ncol=4,bbox_to_anchor=(0.25, 0.00))
-    #fig1.tight_layout
-    plt.subplots_adjust(left=0.1,
-                    bottom=0.1, 
-                    right=0.9, 
-                    top=0.9, 
-                    wspace=0.3, 
-                    hspace=0.7)
-    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(meses)"
-    plt.savefig(ruta_salida+nombre, dpi=140)
-    plt.show
-
-
-#%%
-"""
-Corro funcion
-"""
-ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
-serie_mensual(data_list_cldamt_media_espacial_mensuales_sudamerica,data_list_cldamt_bajas_media_espacial_mensuales_sudamerica,data_list_cldamt_medias_media_espacial_mensuales_sudamerica,data_list_cldamt_altas_media_espacial_mensuales_sudamerica,"cldamt","Sudamérica",0,100,ruta_salida) #60,80
-serie_mensual(data_list_cldamt_media_espacial_mensuales_region1,data_list_cldamt_bajas_media_espacial_mensuales_region1,data_list_cldamt_medias_media_espacial_mensuales_region1,data_list_cldamt_altas_media_espacial_mensuales_region1,"cldamt","Región 1",0,100,ruta_salida) #60,80
-serie_mensual(data_list_cldamt_media_espacial_mensuales_region2,data_list_cldamt_bajas_media_espacial_mensuales_region2,data_list_cldamt_medias_media_espacial_mensuales_region2,data_list_cldamt_altas_media_espacial_mensuales_region2,"cldamt","Región 2",0,100,ruta_salida) #60,80
-serie_mensual(data_list_cldamt_media_espacial_mensuales_corrientes,data_list_cldamt_bajas_media_espacial_mensuales_corrientes,data_list_cldamt_medias_media_espacial_mensuales_corrientes,data_list_cldamt_altas_media_espacial_mensuales_corrientes,"cldamt","Corrientes",0,100,ruta_salida) #60,80
 
 
 #%%
@@ -2132,11 +2065,225 @@ serie_trimestral(data_list_cldamt_altas_media_espacial_estacional_region1,"cldam
 serie_trimestral(data_list_cldamt_altas_media_espacial_estacional_region2,"cldamt_altas","Región 2",10,50,ruta_salida)
 serie_trimestral(data_list_cldamt_altas_media_espacial_estacional_corrientes,"cldamt_altas","Corrientes",10,50,ruta_salida)
 
+
+#%%
+"""
+Veo tendencia y test mann kendall
+"""
+
+import pandas as pd
+import numpy as np
+#cldamt
+cldamt_media_espacial_df_sudamerica=pd.read_csv("Documentos/Doctorado/datos/nubosidad/cldamt_media_espacial_df_sudamerica.csv", index_col=0)
+
+data=cldamt_media_espacial_df_sudamerica["Media_espacial_cldamt"]
+import pymannkendall as mk
+mk.original_test(data, alpha=0.05)
+
+#https://stackoverflow.com/questions/6148207/linear-regression-with-matplotlib-numpy
+
+data=np.array(data)
+fecha=cldamt_media_espacial_df_sudamerica["fecha"]
+fecha_list=np.arange(0,len(fecha),1)
+coef = np.polyfit(fecha_list,data,1)
+poly1d_fn = np.poly1d(coef) 
+poly1d_fn(fecha_list)
+
+import matplotlib.pyplot as plt
+plt.plot(fecha_list,data, '-r', fecha_list, poly1d_fn(fecha_list), '--k')
+
+media= coef[1]
+tendencia= coef[0] #esto es mensual. Para hacerlo decadal multiplico por 12 y por 10
+tendencia_decadal= coef[0]*12*10
+
+desvio=np.std(data)
+
+#%% lo hago con tendencia y testeandola con mann kendall
+
+"""
+grafico las series temporales completas para todos los tipos de nube juntos 
+"""
+#anual
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import pymannkendall as mk
+
+def serie_periodo_completo(data_frame_entrada_cldamt,data_frame_entrada_bajas,data_frame_entrada_medias,data_frame_entrada_altas,variable,region,ruta_salida):
+    fig1, ax = plt.subplots(figsize=[10,6],dpi=200)
+    plt.plot(data_frame_entrada_cldamt["fecha"],data_frame_entrada_cldamt["Media_espacial_"+variable],color="k",alpha=0.7)
+    plt.plot(data_frame_entrada_bajas["fecha"],data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"],color="teal",alpha=0.7)
+    plt.plot(data_frame_entrada_medias["fecha"],data_frame_entrada_medias["Media_espacial_"+variable+"_medias"],color="purple",alpha=0.7)
+    plt.plot(data_frame_entrada_altas["fecha"],data_frame_entrada_altas["Media_espacial_"+variable+"_altas"],color="crimson",alpha=0.7)
+    
+    #agrego lineas de tendencia, si es significativa con un 95% (test mann kendall) lo hago con linea llena y si no con linea intermitente
+    coef1 = np.polyfit(np.arange(0,len(data_frame_entrada_cldamt["fecha"]),1),np.array(data_frame_entrada_cldamt["Media_espacial_"+variable]),1)
+    linear_fit_1=np.poly1d(coef1) 
+    if (abs(mk.original_test(data_frame_entrada_cldamt["Media_espacial_"+variable], alpha=0.05)[3])>1.96):
+        plt.plot(data_frame_entrada_cldamt["fecha"],linear_fit_1(np.arange(0,len(data_frame_entrada_cldamt["fecha"]),1)),color="k",ls="-")
+    else:
+        plt.plot(data_frame_entrada_cldamt["fecha"],linear_fit_1(np.arange(0,len(data_frame_entrada_cldamt["fecha"]),1)),color="k",ls=":")
+
+    coef2 = np.polyfit(np.arange(0,len(data_frame_entrada_bajas["fecha"]),1),np.array(data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"]),1)
+    linear_fit_2=np.poly1d(coef2) 
+    if (abs(mk.original_test(data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"], alpha=0.05)[3])>1.96):
+        plt.plot(data_frame_entrada_bajas["fecha"],linear_fit_2(np.arange(0,len(data_frame_entrada_bajas["fecha"]),1)),color="teal",ls="-")
+    else:
+        plt.plot(data_frame_entrada_bajas["fecha"],linear_fit_2(np.arange(0,len(data_frame_entrada_bajas["fecha"]),1)),color="teal",ls=":")
+
+    coef3 = np.polyfit(np.arange(0,len(data_frame_entrada_medias["fecha"]),1),np.array(data_frame_entrada_medias["Media_espacial_"+variable+"_medias"]),1)
+    linear_fit_3=np.poly1d(coef3) 
+    if (abs(mk.original_test(data_frame_entrada_medias["Media_espacial_"+variable+"_medias"], alpha=0.05)[3])>1.96):
+        plt.plot(data_frame_entrada_medias["fecha"],linear_fit_3(np.arange(0,len(data_frame_entrada_medias["fecha"]),1)),color="purple",ls="-")
+    else:
+        plt.plot(data_frame_entrada_medias["fecha"],linear_fit_3(np.arange(0,len(data_frame_entrada_medias["fecha"]),1)),color="purple",ls=":")
+
+    coef4 = np.polyfit(np.arange(0,len(data_frame_entrada_altas["fecha"]),1),np.array(data_frame_entrada_altas["Media_espacial_"+variable+"_altas"]),1)
+    linear_fit_4=np.poly1d(coef4) 
+    if (abs(mk.original_test(data_frame_entrada_altas["Media_espacial_"+variable+"_altas"], alpha=0.05)[3])>1.96):
+        plt.plot(data_frame_entrada_altas["fecha"],linear_fit_4(np.arange(0,len(data_frame_entrada_altas["fecha"]),1)),color="crimson",ls="-")
+    else:
+        plt.plot(data_frame_entrada_altas["fecha"],linear_fit_4(np.arange(0,len(data_frame_entrada_altas["fecha"]),1)),color="crimson",ls="--")
+
+    media1=np.round(np.nanmean(data_frame_entrada_cldamt["Media_espacial_"+variable]),1)
+    desvio1=np.round(np.nanstd(data_frame_entrada_cldamt["Media_espacial_"+variable]),2)
+    tendencia1=np.round(coef1[0]*12*10,2) #decadal
+    
+    media2=np.round(np.nanmean(data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"]),1)
+    desvio2=np.round(np.nanstd(data_frame_entrada_bajas["Media_espacial_"+variable+"_bajas"]),2)
+    tendencia2=np.round(coef2[0]*12*10,2) #decadal
+  
+    media3=np.round(np.nanmean(data_frame_entrada_medias["Media_espacial_"+variable+"_medias"]),1)
+    desvio3=np.round(np.nanstd(data_frame_entrada_medias["Media_espacial_"+variable+"_medias"]),2)
+    tendencia3=np.round(coef3[0]*12*10,2) #decadal
+
+    media4=np.round(np.nanmean(data_frame_entrada_altas["Media_espacial_"+variable+"_altas"]),1)
+    desvio4=np.round(np.nanstd(data_frame_entrada_altas["Media_espacial_"+variable+"_altas"]),2)
+    tendencia4=np.round(coef4[0]*12*10,2) #decadal
+
+    plt.text(5200,85,"Media (%) \nDesvío (%) \nTendencia decadal (%/dec)",color="k",ha="left",backgroundcolor="white")
+    plt.text(9500,85,str(media1)+" \n"+str(desvio1)+" \n"+ str(tendencia1),color="k",ha="left",backgroundcolor="white")
+    plt.text(10500,85,str(media2)+" \n"+str(desvio2)+" \n"+ str(tendencia2),color="teal",ha="left",backgroundcolor="white")
+    plt.text(11500,85,str(media3)+" \n"+str(desvio3)+" \n"+ str(tendencia3),color="purple",ha="left",backgroundcolor="white")
+    plt.text(12500,85,str(media4)+" \n"+str(desvio4)+" \n"+ str(tendencia4),color="crimson",ha="left",backgroundcolor="white")
+    
+    ax.tick_params(axis='x',direction='out',bottom=True,labelrotation=25, labelsize=10,pad=1.5)
+    ax.set_ylim(0,100)
+    #plt.xticks(data_frame_entrada_cldamt["fecha"][::24])
+    ax.set_xlabel("Fecha", size=10)
+    ax.set_ylabel(variable+" %", size=10)
+    ax.grid()
+    plt.title(variable+" Media mensual media "+region+ " (serie completa)")
+    plt.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"])
+    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(serie completa)"
+    plt.savefig(ruta_salida+nombre, dpi=140)
+    plt.show
+
+
+#%%
+#lo corro
+ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
+serie_periodo_completo(cldamt_media_espacial_df_sudamerica,cldamt_bajas_media_espacial_df_sudamerica,cldamt_medias_media_espacial_df_sudamerica,cldamt_altas_media_espacial_df_sudamerica,"cldamt","Sudamérica",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_region1,cldamt_bajas_media_espacial_df_region1,cldamt_medias_media_espacial_df_region1,cldamt_altas_media_espacial_df_region1,"cldamt","Región 1",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_region2,cldamt_bajas_media_espacial_df_region2,cldamt_medias_media_espacial_df_region2,cldamt_altas_media_espacial_df_region2,"cldamt","Región 2",ruta_salida)
+serie_periodo_completo(cldamt_media_espacial_df_corrientes,cldamt_bajas_media_espacial_df_corrientes,cldamt_medias_media_espacial_df_corrientes,cldamt_altas_media_espacial_df_corrientes,"cldamt","Corrientes",ruta_salida)
+
+#%%
+"""
+Lo hago para cldamt, bajas, medias y altas junto  VER DE PONER SOLO LOS NUMEROS DE LOS ANIOS EN LOS EJES 
+"""
+#mensual
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import pymannkendall as mk
+
+def serie_mensual(lista_cldamt,lista_bajas,lista_medias,lista_altas,variable,region,ymin,ymax,ruta_salida):
+
+    fig1, ax = plt.subplots(4,3,figsize=[12,10],dpi=200) #https://matplotlib.org/devdocs/gallery/subplots_axes_and_figures/subplots_demo.html
+    fig1.suptitle(variable+" Media mensual media "+region+ " (meses)",size=18)
+    
+    meses=[["Enero","Febrero","Marzo"],["Abril","Mayo","Junio"],["Julio","Agosto","Septiembre"],["Octubre","Noviembre","Diciembre"]]
+    for j in range(0,4):
+        for i in range(0,3):
+            ax[j,i].plot(lista_cldamt[i+3*j]["fecha"],lista_cldamt[i+3*j]["Media_espacial_"+variable],color="k",alpha=0.7)
+            ax[j,i].plot(lista_bajas[i+3*j]["fecha"],lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"],color="teal",alpha=0.7)
+            ax[j,i].plot(lista_medias[i+3*j]["fecha"],lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"],color="purple",alpha=0.7)
+            ax[j,i].plot(lista_altas[i+3*j]["fecha"],lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"],color="crimson",alpha=0.7)
+            
+            #agrego lineas de tendencia, si es significativa con un 95% (test mann kendall) lo hago con linea llena y si no con linea intermitente
+            coef1 = np.polyfit(np.arange(0,len(lista_cldamt[i+3*j]["fecha"]),1),np.array(lista_cldamt[i+3*j]["Media_espacial_"+variable]),1)
+            linear_fit_1=np.poly1d(coef1) 
+            if (abs(mk.original_test(lista_cldamt[i+3*j]["Media_espacial_"+variable], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_cldamt[i+3*j]["fecha"],linear_fit_1(np.arange(0,len(lista_cldamt[i+3*j]["fecha"]),1)),color="k",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_cldamt[i+3*j]["fecha"],linear_fit_1(np.arange(0,len(lista_cldamt[i+3*j]["fecha"]),1)),color="k",ls=":",lw=0.9)
+
+            coef2 = np.polyfit(np.arange(0,len(lista_bajas[i+3*j]["fecha"]),1),np.array(lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"]),1)
+            linear_fit_2=np.poly1d(coef2) 
+            if (abs(mk.original_test(lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_bajas[i+3*j]["fecha"],linear_fit_2(np.arange(0,len(lista_bajas[i+3*j]["fecha"]),1)),color="teal",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_bajas[i+3*j]["fecha"],linear_fit_2(np.arange(0,len(lista_bajas[i+3*j]["fecha"]),1)),color="teal",ls=":",lw=0.9)
+
+            coef3 = np.polyfit(np.arange(0,len(lista_medias[i+3*j]["fecha"]),1),np.array(lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"]),1)
+            linear_fit_3=np.poly1d(coef3) 
+            if (abs(mk.original_test(lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_medias[i+3*j]["fecha"],linear_fit_3(np.arange(0,len(lista_medias[i+3*j]["fecha"]),1)),color="purple",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_medias[i+3*j]["fecha"],linear_fit_3(np.arange(0,len(lista_medias[i+3*j]["fecha"]),1)),color="purple",ls=":",lw=0.9)
+
+            coef4 = np.polyfit(np.arange(0,len(lista_altas[i+3*j]["fecha"]),1),np.array(lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"]),1)
+            linear_fit_4=np.poly1d(coef4) 
+            if (abs(mk.original_test(lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_altas[i+3*j]["fecha"],linear_fit_4(np.arange(0,len(lista_altas[i+3*j]["fecha"]),1)),color="crimson",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_altas[i+3*j]["fecha"],linear_fit_4(np.arange(0,len(lista_altas[i+3*j]["fecha"]),1)),color="crimson",ls=":",lw=0.9)
+
+            
+            ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
+            ax[j,i].set_ylim(ymin,ymax)
+            ax[j,i].set_xlabel("Fecha", size=10)
+            ax[j,i].set_ylabel(variable+" %", size=10)
+            ax[j,i].grid()
+            ax[j,i].set_title(meses[j][i])
+            ax[j,i].text(8300,75,str(np.round(np.nanmean(lista_cldamt[i+3*j]["Media_espacial_"+variable]),1))+" \n"+str(np.round(np.nanstd(lista_cldamt[i+3*j]["Media_espacial_"+variable]),2))+" \n"+np.str(np.round(coef1[0]*10,2)),fontsize="x-small", c="k")#, backgroundcolor="white")
+            ax[j,i].text(9800,75,str(np.round(np.nanmean(lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"]),1))+" \n"+str(np.round(np.nanstd(lista_bajas[i+3*j]["Media_espacial_"+variable+"_bajas"]),2))+" \n"+np.str(np.round(coef2[0]*10,2)),fontsize="x-small", c="teal")#, backgroundcolor="white")
+            ax[j,i].text(11300,75,str(np.round(np.nanmean(lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"]),1))+" \n"+str(np.round(np.nanstd(lista_medias[i+3*j]["Media_espacial_"+variable+"_medias"]),2))+" \n"+np.str(np.round(coef3[0]*10,2)),fontsize="x-small", c="purple")#, backgroundcolor="white")
+            ax[j,i].text(12800,75,str(np.round(np.nanmean(lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"]),1))+" \n"+str(np.round(np.nanstd(lista_altas[i+3*j]["Media_espacial_"+variable+"_altas"]),2))+" \n"+np.str(np.round(coef4[0]*10,2)),fontsize="x-small", c="crimson")#, backgroundcolor="white")
+
+    #plt.xticks(lista_cldamt[0]["fecha"][::1])
+    fig1.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"], loc='lower left',ncol=4,bbox_to_anchor=(0.25, 0.00))
+    #fig1.tight_layout
+    plt.subplots_adjust(left=0.1,
+                    bottom=0.1, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0.3, 
+                    hspace=0.7)
+    nombre=variable+"_"+"media_espacial_mensual_"+region+"_"+"(meses)"
+    plt.savefig(ruta_salida+nombre, dpi=140)
+    plt.show
+
+#%%
+"""
+Corro funcion
+"""
+ruta_salida="/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_bajas_medias_altas_series/"
+serie_mensual(data_list_cldamt_media_espacial_mensuales_sudamerica,data_list_cldamt_bajas_media_espacial_mensuales_sudamerica,data_list_cldamt_medias_media_espacial_mensuales_sudamerica,data_list_cldamt_altas_media_espacial_mensuales_sudamerica,"cldamt","Sudamérica",0,100,ruta_salida) #60,80
+serie_mensual(data_list_cldamt_media_espacial_mensuales_region1,data_list_cldamt_bajas_media_espacial_mensuales_region1,data_list_cldamt_medias_media_espacial_mensuales_region1,data_list_cldamt_altas_media_espacial_mensuales_region1,"cldamt","Región 1",0,100,ruta_salida) #60,80
+serie_mensual(data_list_cldamt_media_espacial_mensuales_region2,data_list_cldamt_bajas_media_espacial_mensuales_region2,data_list_cldamt_medias_media_espacial_mensuales_region2,data_list_cldamt_altas_media_espacial_mensuales_region2,"cldamt","Región 2",0,100,ruta_salida) #60,80
+serie_mensual(data_list_cldamt_media_espacial_mensuales_corrientes,data_list_cldamt_bajas_media_espacial_mensuales_corrientes,data_list_cldamt_medias_media_espacial_mensuales_corrientes,data_list_cldamt_altas_media_espacial_mensuales_corrientes,"cldamt","Corrientes",0,100,ruta_salida) #60,80
+
 #%% armo funcion con cldamt, bajas, medias y altas juntas
 
 #trimestral
 
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+import pymannkendall as mk
 
 def serie_trimestral(lista_cldamt,lista_bajas,lista_medias,lista_altas,variable,region,ymin,ymax,ruta_salida):
 
@@ -2146,16 +2293,53 @@ def serie_trimestral(lista_cldamt,lista_bajas,lista_medias,lista_altas,variable,
     estacion=[["DEF","MAM"],["JJA","SON"]]
     for j in range(0,2):
         for i in range(0,2):
-            ax[j,i].plot(lista_cldamt[i+2*j]["fecha"],lista_cldamt[i+2*j]["Media_espacial_media_estacion"],color="k")
-            ax[j,i].plot(lista_bajas[i+2*j]["fecha"],lista_bajas[i+2*j]["Media_espacial_media_estacion"],color="teal")
-            ax[j,i].plot(lista_medias[i+2*j]["fecha"],lista_medias[i+2*j]["Media_espacial_media_estacion"],color="purple")
-            ax[j,i].plot(lista_altas[i+2*j]["fecha"],lista_altas[i+2*j]["Media_espacial_media_estacion"],color="crimson")
+            ax[j,i].plot(lista_cldamt[i+2*j]["fecha"],lista_cldamt[i+2*j]["Media_espacial_media_estacion"],color="k",alpha=0.7)
+            ax[j,i].plot(lista_bajas[i+2*j]["fecha"],lista_bajas[i+2*j]["Media_espacial_media_estacion"],color="teal",alpha=0.7)
+            ax[j,i].plot(lista_medias[i+2*j]["fecha"],lista_medias[i+2*j]["Media_espacial_media_estacion"],color="purple",alpha=0.7)
+            ax[j,i].plot(lista_altas[i+2*j]["fecha"],lista_altas[i+2*j]["Media_espacial_media_estacion"],color="crimson",alpha=0.7)
+            
+            #agrego lineas de tendencia, si es significativa con un 95% (test mann kendall) lo hago con linea llena y si no con linea intermitente
+            coef1 = np.polyfit(np.arange(0,len(lista_cldamt[i+2*j]["fecha"]),1),np.array(lista_cldamt[i+2*j]["Media_espacial_media_estacion"]),1)
+            linear_fit_1=np.poly1d(coef1) 
+            if (abs(mk.original_test(lista_cldamt[i+2*j]["Media_espacial_media_estacion"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_cldamt[i+2*j]["fecha"],linear_fit_1(np.arange(0,len(lista_cldamt[i+2*j]["fecha"]),1)),color="k",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_cldamt[i+2*j]["fecha"],linear_fit_1(np.arange(0,len(lista_cldamt[i+2*j]["fecha"]),1)),color="k",ls=":",lw=0.9)
+
+            coef2 = np.polyfit(np.arange(0,len(lista_bajas[i+2*j]["fecha"]),1),np.array(lista_bajas[i+2*j]["Media_espacial_media_estacion"]),1)
+            linear_fit_2=np.poly1d(coef2) 
+            if (abs(mk.original_test(lista_bajas[i+2*j]["Media_espacial_media_estacion"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_bajas[i+2*j]["fecha"],linear_fit_2(np.arange(0,len(lista_bajas[i+2*j]["fecha"]),1)),color="teal",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_bajas[i+2*j]["fecha"],linear_fit_2(np.arange(0,len(lista_bajas[i+2*j]["fecha"]),1)),color="teal",ls=":",lw=0.9)
+
+            coef3 = np.polyfit(np.arange(0,len(lista_medias[i+2*j]["fecha"]),1),np.array(lista_medias[i+2*j]["Media_espacial_media_estacion"]),1)
+            linear_fit_3=np.poly1d(coef3) 
+            if (abs(mk.original_test(lista_medias[i+2*j]["Media_espacial_media_estacion"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_medias[i+2*j]["fecha"],linear_fit_3(np.arange(0,len(lista_medias[i+2*j]["fecha"]),1)),color="purple",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_medias[i+2*j]["fecha"],linear_fit_3(np.arange(0,len(lista_medias[i+2*j]["fecha"]),1)),color="purple",ls=":",lw=0.9)
+
+            coef4 = np.polyfit(np.arange(0,len(lista_altas[i+2*j]["fecha"]),1),np.array(lista_altas[i+2*j]["Media_espacial_media_estacion"]),1)
+            linear_fit_4=np.poly1d(coef4) 
+            if (abs(mk.original_test(lista_altas[i+2*j]["Media_espacial_media_estacion"], alpha=0.05)[3])>1.96):
+                ax[j,i].plot(lista_altas[i+2*j]["fecha"],linear_fit_4(np.arange(0,len(lista_altas[i+2*j]["fecha"]),1)),color="crimson",ls="-",lw=0.9)
+            else:
+                ax[j,i].plot(lista_altas[i+2*j]["fecha"],linear_fit_4(np.arange(0,len(lista_altas[i+2*j]["fecha"]),1)),color="crimson",ls=":",lw=0.9)
+
+
             ax[j,i].tick_params(axis='x',direction='out',bottom=True,labelrotation=45, labelsize=10,pad=1.5)
             ax[j,i].set_ylim(ymin,ymax)
             ax[j,i].set_xlabel("Fecha", size=10)
             ax[j,i].set_ylabel(variable+" %", size=10)
             ax[j,i].grid()
             ax[j,i].set_title(estacion[j][i])
+            
+            ax[j,i].text(1984,81,"Media (%) \nDesvío (%) \nTendencia (%/dec)",color="k",ha="left",backgroundcolor="white")
+            ax[j,i].text(1998,81,str(np.round(np.nanmean(lista_cldamt[i+2*j]["Media_espacial_media_estacion"]),1))+" \n"+str(np.round(np.nanstd(lista_cldamt[i+2*j]["Media_espacial_media_estacion"]),2))+" \n"+np.str(np.round(coef1[0]*10,2)), c="k", backgroundcolor="white")
+            ax[j,i].text(2002,81,str(np.round(np.nanmean(lista_bajas[i+2*j]["Media_espacial_media_estacion"]),1))+" \n"+str(np.round(np.nanstd(lista_bajas[i+2*j]["Media_espacial_media_estacion"]),2))+" \n"+np.str(np.round(coef2[0]*10,2)), c="teal", backgroundcolor="white")
+            ax[j,i].text(2006,81,str(np.round(np.nanmean(lista_medias[i+2*j]["Media_espacial_media_estacion"]),1))+" \n"+str(np.round(np.nanstd(lista_medias[i+2*j]["Media_espacial_media_estacion"]),2))+" \n"+np.str(np.round(coef3[0]*10,2)), c="purple", backgroundcolor="white")
+            ax[j,i].text(2010,81,str(np.round(np.nanmean(lista_altas[i+2*j]["Media_espacial_media_estacion"]),1))+" \n"+str(np.round(np.nanstd(lista_altas[i+2*j]["Media_espacial_media_estacion"]),2))+" \n"+np.str(np.round(coef4[0]*10,2)), c="crimson", backgroundcolor="white")
 
     fig1.legend(["cldamt","cldamt bajas","cldamt medias","cldamt altas"], loc='lower left',ncol=4,bbox_to_anchor=(0.25, 0.00))
     #fig1.tight_layout
@@ -2176,7 +2360,6 @@ serie_trimestral(data_list_cldamt_media_espacial_estacional_sudamerica,data_list
 serie_trimestral(data_list_cldamt_media_espacial_estacional_region1,data_list_cldamt_bajas_media_espacial_estacional_region1,data_list_cldamt_medias_media_espacial_estacional_region1,data_list_cldamt_altas_media_espacial_estacional_region1,"cldamt","Región 1",0,100,ruta_salida)
 serie_trimestral(data_list_cldamt_media_espacial_estacional_region2,data_list_cldamt_bajas_media_espacial_estacional_region2,data_list_cldamt_medias_media_espacial_estacional_region2,data_list_cldamt_altas_media_espacial_estacional_region2,"cldamt","Región 2",0,100,ruta_salida)
 serie_trimestral(data_list_cldamt_media_espacial_estacional_corrientes,data_list_cldamt_bajas_media_espacial_estacional_corrientes,data_list_cldamt_medias_media_espacial_estacional_corrientes,data_list_cldamt_altas_media_espacial_estacional_corrientes,"cldamt","Corrientes",0,100,ruta_salida)
-
 
 #%%
 """
