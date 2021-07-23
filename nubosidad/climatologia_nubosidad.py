@@ -774,7 +774,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cmocean
 
-def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion):
+def grafico_campos_climatologia_nubosidad_tendencias(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion,nombre_periodo):
     """
     Parameters
     ----------
@@ -854,6 +854,7 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
     variable_data_subset=variable_data[lat_inds,:][:,lon_inds]
     variable_significancia_subset=variable_significancia[lat_inds,:][:,lon_inds]
 
+    variable_significancia_subset=variable_significancia_subset.where(variable_significancia==0) #me quedo solo con los que No son significativos para marcar esas regiones con puntitos, si quiero marcar las significativas cambiar 0 por 1
 
     #ploteo
     if (orientacion=="H"):
@@ -892,13 +893,14 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
                    extend='both',
                    transform=ccrs.PlateCarree(),
                    cbar_kwargs={'label': variable_data_subset.units},
-                   cmap=cmocean.cm.balance_r)
+                   cmap=cmocean.cm.balance)
     
+    #grafico puntos en los lugares donde no es significativo
+    variable_significancia_subset.plot.contourf(ax=ax,levels=[0,1], hatches=['.'], alpha=0,add_colorbar=False) 
+
+    #seteo el fondo gris para que los nans aparezcan en este color
+    ax.set_facecolor('tab:gray') 
     
-        #######ver estas lineas###############
-    #facecolors = np.ma.array(variable_data_subset, mask=np.isnan(variable_data_subset))
-    #ax.set_array(facecolors)
-        #######ver estas lineas###############
     ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
                   edgecolor='0.5',linewidth=0.7,alpha=0.8)
 
@@ -920,11 +922,12 @@ def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatolog
 
     plt.title(variable+" "+region)
     #plt.tight_layout()
-    plt.savefig(ruta_salida+"/"+variable+" "+region+" ")
+    plt.savefig(ruta_salida+"/"+variable+"_tendencia_"+region+"_"+nombre_periodo)
     plt.show()
 
+#%%
 #ploteo para sudamerica 
-grafico_campos_climatologia_nubosidad(paises,provincias,ARR_3D_COMPLETO_subset,1,"cldamt tendencia decadal (1984-2016)","",-60,15,-90,-30,"%",-8,8,1,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia_tendencia","balance",8,"V")
+grafico_campos_climatologia_nubosidad_tendencias(paises,provincias,ARR_3D_COMPLETO_subset,1,"cldamt tendencia decadal (1984-2016)","",-60,15,-90,-30,"%",-8,8,1,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia","balance",8,"V","periodo_completo")
 
 #%%
 """
