@@ -384,6 +384,7 @@ desvio_trimestral_cldamt_altas_list[3]=media_desvio_trimestral(data_list_12_1983
 
 
 
+
 #%%
 """
 Recorto los xarrays de la climatologia para el shape de Corrientes
@@ -591,7 +592,339 @@ for i in range(0,4):
     coords=np.array(IGN.geometry[19][0].exterior.coords)
     desvio_trimestral_cldamt_altas_list_clipped[i]=clip_xarray_con_shape(coords, desvio_trimestral_cldamt_altas_list, i,"climatologia","cldamt_altas")[0]
 
+#%% Creo campos con tendencias
 
+import pandas as pd
+import numpy as np
+import pymannkendall as mk
+import xarray as xr
+
+# funcion que calcula la tendencia y la testea. El primer return va a ser el valor de la tendencia decadal. El segundo return va a ser un true false si es o no significativa con un 95% de confianza con un test de Mann Kendall 
+def tendencia(data):
+    """
+
+    Parameters
+    ----------
+    data : pd.DATAFRAME o np.array
+        Data frame con serie de datos a calcular la tendencia. En la primer columna las fechas, en la segunda los dato
+
+    Returns
+    -------
+    tendencia: NP.FLOAT
+        valor de la tendencia dada entre un intervalo de tiempo. A esta salida si quiero tendencia decadal e ingrese datos de toda la serie mensual lo multiplico por 10*12 y si quiero por decada y vienen dados por un dato anual se multiplica por 10
+    
+    significativo: True False
+        True si es significativo con un 95% de confianza con el test de Mann Kendall. False si no lo es. 
+    """
+    if type(data)==pd.core.frame.DataFrame:
+        fechas=data.iloc[:,0]
+        fechas_list=np.arange(0,len(fechas),1)
+        datos=data.iloc[:,1]
+        datos_array=np.array(datos)
+    if type(data)==np.ndarray:
+        fechas_list=np.arange(0,len(data),1)
+        datos_array=data
+    
+    datos_array=datos_array[np.isfinite(datos_array)]
+    
+    #si el vector es todo de nan entonces que no calcule la tendencia, y que devuelva nan
+    if datos_array.size == 0:
+        tendencia=np.nan
+        significativo=np.nan
+    #si el vector tiene valores distintos de nan calcyula tendencia y significancia
+    if datos_array.size != 0:
+        fechas_list=fechas_list[np.isfinite(datos_array)] 
+        coef=np.polyfit(fechas_list,datos_array,1)
+        tendencia=coef[0] #dada entre un intervalo de tiempo. A esta salida si quiero tendencia decadal e ingrese datos de toda la serie mensual lo multiplico por 10*12 y si quiero por decada y vienen dados por un dato anual se multiplica por 10
+        z_test=mk.original_test(datos_array, alpha=0.05)[3]
+        if abs(z_test)>=1.96:
+            significativo=True
+        if abs(z_test)<1.96:
+            significativo=False
+    return(tendencia,significativo)
+
+
+#armo funcion que convierte las listas con distintos tiempos en un arr_3D donde cada capa es una fecha
+def array_3D_completo(data_list, variable):
+    """
+    crea un array 3D con las variables, cada capa un tiempo. 
+    """
+    n=1
+    arr_3D=np.empty((1,180,360))
+    for i in range(0,len(data_list)):
+        variable_data=[data_list[i][variable].mean("time", keep_attrs=True).values]
+        arr_3D=np.concatenate([arr_3D,variable_data])
+        n=n+1
+        arr_3D=np.reshape(arr_3D,(n,180,360))
+    arr_3D=arr_3D[1:np.shape(arr_3D)[0],:,:]
+    return(arr_3D)
+
+def array_3D_mes(data_list, variable,mes):
+    """
+    crea un array 3D con las variables, cada capa un tiempo. 
+    """
+    n=1
+    arr_3D=np.empty((1,180,360))
+    for i in range(0,len(data_list)):
+        if (str(data_list[i]["time"].values[0])[5:7]==mes):
+            variable_data=[data_list[i][variable].mean("time", keep_attrs=True).values]
+            arr_3D=np.concatenate([arr_3D,variable_data])
+            n=n+1
+            arr_3D=np.reshape(arr_3D,(n,180,360))
+    arr_3D=arr_3D[1:np.shape(arr_3D)[0],:,:]
+    return(arr_3D)
+
+
+def array_3D_trimestre(data_list, variable, mes1):
+    """
+    crea un array 3D con las variables, cada capa un tiempo. 
+    """
+    n1=1
+    arr_3D1=np.empty((1,180,360))
+    for i in range(0,len(data_list)):
+        if (str(data_list[i]["time"].values[0])[5:7]==mes1):
+            variable_data1=[data_list[i][variable].mean("time", keep_attrs=True).values]
+            arr_3D1=np.concatenate([arr_3D1,variable_data1])
+            n1=n1+1
+            arr_3D1=np.reshape(arr_3D1,(n1,180,360))
+            
+            variable_data2=[data_list[i+1][variable].mean("time", keep_attrs=True).values]
+            arr_3D1=np.concatenate([arr_3D1,variable_data2])
+            n1=n1+1
+            arr_3D1=np.reshape(arr_3D1,(n1,180,360))
+            
+            variable_data3=[data_list[i+2][variable].mean("time", keep_attrs=True).values]
+            arr_3D1=np.concatenate([arr_3D1,variable_data3])
+            n1=n1+1
+            arr_3D1=np.reshape(arr_3D1,(n1,180,360))
+    
+    arr_3D1=arr_3D1[1:np.shape(arr_3D1)[0],:,:]
+    return(arr_3D1)
+
+def tendencia_campo(arr_3D, lats, lons, variable, unidad,pormesotrimestre, mes_trimestre):
+    if pormesotrimestre==False:
+        n_lats=len(arr_3D[1,:,1])
+        n_lons=len(arr_3D[1,1,:])
+        tendencia_array=np.empty((2,n_lats,n_lons))
+        for i in range(0,n_lats):
+            for j in range(0,n_lons):
+                data=arr_3D[:,i,j]
+                tendencia_array[0,i,j]=tendencia(data)[0]*10*12
+                if tendencia(data)[1]==True:
+                    tendencia_array[1,i,j]=1
+                if tendencia(data)[1]==False:
+                    tendencia_array[1,i,j]=0
+    if pormesotrimestre==True:
+        tendencia_array=np.empty((1,n_lats,n_lons))
+        for i in range(0,n_lats):
+            for j in range(0,n_lons):
+                data=arr_3D[:,i,j]
+                tendencia_array[0,i,j]=tendencia(data)[0]*10
+                if tendencia(data)[1]==True:
+                    tendencia_array[1,i,j]=1
+                if tendencia(data)[1]==False:
+                    tendencia_array[1,i,j]=0
+    #cargo lats y lons para armar xarray
+
+    coords=[("tendencia",np.array([1,2])),("lat", lats),("lon", lons)] #add first coord
+    
+    #salida tendencia
+    xarray_media=xr.DataArray(tendencia_array, coords=coords)
+    xarray_media.name=variable+ " tendencia "+ mes_trimestre
+    xarray_media.attrs['units']=unidad
+    
+    return(xarray_media)
+    #return(tendencia_array)
+#%%
+# lo corro 
+
+data_list_1984_2016=data_list[6:402]
+
+
+ARR_3D_COMPLETO=array_3D_completo(data_list_1984_2016, "cldamt")
+#recorto region que voy a necesitar, un entorno a la region que defino como sudamerica
+#ARR_3D_COMPLETO=ARR_3D_COMPLETO[:,np.arange(80,100),:][:,:,np.arange(80,100)]
+#recorto region 
+
+
+#selecciono region
+lats=data_list_1984_2016[0]["lat"][:]
+lons=data_list_1984_2016[0]["lon"][:]
+lat_lims=[-65,20]
+lon_lims=[360-95,360-25] 
+lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+
+variable_data_subset=data_list_1984_2016[0]["cldamt"].mean("time", keep_attrs=True)[lat_inds,lon_inds]
+
+lats=variable_data_subset["lat"][:].values
+lons=variable_data_subset["lon"][:].values
+
+ARR_3D_COMPLETO_subset=ARR_3D_COMPLETO[:,lat_inds,:][:,:,lon_inds] #lats 85 lons 70
+
+TENDENCIA_COMPLETO=tendencia_campo(ARR_3D_COMPLETO_subset,lats,lons,"cldamt","%/decada", False, "completo") #funciona <3
+#%% PRUEBO GRAFICO funciona, agregar puntos a los lugares con significancia. 
+# https://matplotlib.org/stable/gallery/images_contours_and_fields/irregulardatagrid.html 
+# https://stackoverflow.com/questions/36721977/overly-patches-which-represent-the-significants-points-over-contour-map
+"""
+Defino funcion que grafica climatologia ANUAL de alguna variable definida previamente en una determinada region (region cuadrada)
+"""
+#carga librerias necesarias
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cmocean
+
+def grafico_campos_climatologia_nubosidad(paises,provincias,data_list_climatologia,indice_list,variable,climatologia_tipo,lat_min,lat_max,lon_min,lon_max,unidades_nombre,valor_minimo, valor_maximo, delta_valor,xticks_min,xticks_max, yticks_min, yticks_max,grid,region, ruta_salida, paleta_color,espacio_entre_lat_lon,orientacion):
+    """
+    Parameters
+    ----------
+    paises : shapely.geometry.multipolygon.MultiPolygon
+        shape con paises a graficar en mapa
+    provincias : shapely.geometry.multipolygon.MultiPolygon
+        shape con provincias a graficar en mapa
+    data_list_climatologia : list
+        lista con data climatologica, en cada elemento de la lista hay un NetCDF i.e un xarray.core.dataset.Dataset
+    indice_list : float
+        indice del elemento de la lista a abrir
+    variable : string
+        nombre de la variable de los NetCDF a graficar
+    climatologia_tipo: string
+        "mensual" o "trimestral" 
+    lat_min : float
+        latitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lat_max : float
+        latitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado
+    lon_min : float
+        longitud minima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    lon_max : float
+        longitud maxima a seleccionar de las variables, obs: van con decimales 0.5 y cada 1 grado, usar grados oeste con su signo -
+    unidades_nombre : string
+        nombre que se desea para las unidades de la variable, aparece en el grafico
+    valor_minimo : float
+        valor minimo que toma la escala de la variable
+    valor_maximo : float
+        valor maximo que toma la escala de la variable
+    delta_valor : float
+        intervalo entre valores de la escala de la variable
+    xticks_min : float
+        minimo de longitud que se marca en el grafico en grados oeste con el signo -
+    xticks_max : float
+        maximo de longitud que se marca en el grafico en grados oeste con el signo -
+    yticks_min : float
+        minimo de latitud que se marca en el grafico en grados sur con el signo -.
+    yticks_max : float
+        maximo de latitud que se marca en el grafico en grados sur con el signo -.
+    grid : optional
+        The default is True.
+    region: string
+        Nombre de la region
+    ruta_salida : str
+        Ruta donde se guardan los graficos
+    paleta_color: rain (de cero a positivos) / curl (para negativos y positivos) /matter (de cero a positivos en rosas)
+    espacio_entre_lat_lon: float
+        4 para region chica (menos separacion), 8 para region grande (mas separacion)
+    orientacion: str
+        "H": horizontal "V": vertical
+    Returns
+    -------
+    Guarda graficos y los muestra.
+
+    """
+    #carga librerias necesarias
+    #import matplotlib.pyplot as plt
+    #import cartopy.crs as ccrs
+    #import cmocean
+    
+    #limpio graficos
+    plt.close()
+    
+    #selecciona variable
+    variable_data=TENDENCIA_COMPLETO[0]
+    variable_significancia=TENDENCIA_COMPLETO[1]
+    ##variable_data=data[variable].mean("time", keep_attrs=True) #selecciona variable y toma el unico valor para cada punto de grilla
+    #variable_data.attrs["units"]=unidades_nombre #cambio el nombre de la unidad
+
+    #selecciono region
+    lats=variable_data["lat"][:]
+    lons=variable_data["lon"][:]
+    lat_lims=[lat_min,lat_max]
+    lon_lims=[360+lon_min,360+lon_max] #lean 360-64 (64 O) 360-31 (31 O) 
+    lat_inds=np.where((lats>lat_lims[0]) & (lats<lat_lims[1]))[0]
+    lon_inds=np.where((lons>lon_lims[0]) & (lons<lon_lims[1]))[0]
+    variable_data_subset=variable_data[lat_inds,:][:,lon_inds]
+    variable_significancia_subset=variable_significancia[lat_inds,:][:,lon_inds]
+
+
+    #ploteo
+    if (orientacion=="H"):
+        fig1 = plt.figure(figsize=[9,5],dpi=200) #horizontal region 1
+    if (orientacion=="V"):
+        fig1 = plt.figure(figsize=[7.5,7.5],dpi=200) #vertical sudamerica
+    ax = fig1.add_subplot(111,projection=ccrs.PlateCarree(central_longitude=0))
+
+    if (paleta_color=="rain"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.rain)
+    
+    if (paleta_color=="curl"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.curl_r)
+
+    if (paleta_color=="matter"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='neither',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.matter)
+        
+    if (paleta_color=="balance"):
+        variable_data_subset.plot.contourf(ax=ax,
+                   levels=np.arange(valor_minimo, valor_maximo, delta_valor),
+                   extend='both',
+                   transform=ccrs.PlateCarree(),
+                   cbar_kwargs={'label': variable_data_subset.units},
+                   cmap=cmocean.cm.balance_r)
+    
+    
+        #######ver estas lineas###############
+    #facecolors = np.ma.array(variable_data_subset, mask=np.isnan(variable_data_subset))
+    #ax.set_array(facecolors)
+        #######ver estas lineas###############
+    ax.add_geometries(provincias, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.5',linewidth=0.7,alpha=0.8)
+
+    ax.add_geometries(paises, crs=ccrs.PlateCarree(), facecolor='none', 
+                  edgecolor='0.4',alpha=0.8)
+
+    ax.coastlines(color='0.3')
+
+    ax.set_xticklabels(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
+    plt.xticks(np.arange(xticks_min,xticks_max)[::espacio_entre_lat_lon])
+    ax.set_xlabel("Longitud")
+
+    ax.set_yticklabels(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
+    plt.yticks(np.arange(yticks_min,yticks_max)[::espacio_entre_lat_lon])
+    ax.set_ylabel("Latitud")
+
+    if (grid==True):
+        plt.grid(linestyle="--", alpha=0.3)
+
+    plt.title(variable+" "+region)
+    #plt.tight_layout()
+    plt.savefig(ruta_salida+"/"+variable+" "+region+" ")
+    plt.show()
+
+#ploteo para sudamerica 
+grafico_campos_climatologia_nubosidad(paises,provincias,ARR_3D_COMPLETO_subset,1,"cldamt tendencia decadal (1984-2016)","",-60,15,-90,-30,"%",-8,8,1,-85,-30,-55,15,True,"Sudamérica","/home/nadia/Documentos/Doctorado/resultados/resultados2021/nubosidad/cldamt_climatologia_tendencia","balance",8,"V")
 
 #%%
 """
