@@ -565,6 +565,10 @@ del(trimestres)
 del(mes)
 del(trimestre)
 
+# %% Calculo estadisticos: Corro funcion. Media y desvio anual, por mes y por estacion. Media periodo 2000-2016 - media periodo 1984-2000 (ver de hacer lo mismo con desvio)
+
+
+
 # %% Recorto los xarray para el shape de Corrientes: corro funcion. Para variable original y para los estadisticos media y desvio
 """
 Corro esta funcion y armo lista con los estadisticos (media y desvio) recortados en la provincia de Corrientes mensual y trimestral y otra lista con todos los dias clippeados de cldamt
